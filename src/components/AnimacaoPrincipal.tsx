@@ -172,7 +172,6 @@ export const AnimacaoPrincipal: React.FC = () => {
 
               {/* Camadas de Páginas Extras - Alternando Imagens */}
               {[1, 2, 3, 4, 5, 6].map((i) => {
-                const imgNum = (i % 3) === 0 ? '' : (i % 3) + 1;
                 const imgSrc = i === 1 ? '/outras-paginas.png' : 
                                i === 2 ? '/outras-paginas2.png' : 
                                i === 3 ? '/outras-paginas3.png' :
