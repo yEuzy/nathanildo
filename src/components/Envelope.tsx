@@ -6,9 +6,10 @@ interface EnvelopeProps {
   isOpen: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  guestName?: string;
 }
 
-export const Envelope: React.FC<EnvelopeProps> = ({ isOpen, onClick, children }) => {
+export const Envelope: React.FC<EnvelopeProps> = ({ isOpen, onClick, children, guestName }) => {
   return (
     <motion.div 
       className="envelope-wrapper"
@@ -34,6 +35,14 @@ export const Envelope: React.FC<EnvelopeProps> = ({ isOpen, onClick, children })
         <div className="pocket-wrapper">
           <div className="envelope-pocket" />
         </div>
+        
+        {/* Nome do convidado na diagonal */}
+        {!isOpen && guestName && (
+          <div className="guest-name-badge">
+            <span className="para-text">Para:</span>
+            <span className="name-text">{guestName}</span>
+          </div>
+        )}
       </div>
 
       <motion.div 
