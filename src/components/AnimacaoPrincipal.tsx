@@ -182,15 +182,6 @@ export const AnimacaoPrincipal: React.FC = () => {
             )}
 
             {/* Botão VIP dentro do convite ampliado */}
-            {vipNames.includes(guestName) && (
-              <button
-                className="vip-admin-card-btn"
-                onClick={() => navigate("/admin-presentes")}
-                title="Gerenciar Presentes"
-              >
-                <GiftIcon size={20} />
-              </button>
-            )}
 
             <div className="modal-card-display">
                 {conviteImageUrl ? (
@@ -232,6 +223,15 @@ export const AnimacaoPrincipal: React.FC = () => {
                   <img src="/028.png" alt="Dicas" className="btn-icon" />
                   <span>Dicas</span>
                 </button>
+                {vipNames.includes(guestName) && (
+                  <button
+                    className="action-btn admin-btn-special"
+                    onClick={() => navigate("/admin-presentes")}
+                  >
+                    <GiftIcon className="btn-icon" />
+                    <span>Admin</span>
+                  </button>
+                )}
               </div>
             </motion.div>
           </motion.div>

@@ -421,29 +421,14 @@ html, body {
 }
 
 
-/* VIP Admin Button (Inside Card) */
-.vip-admin-card-btn {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+/* Admin Button Special (in action bar) */
+.admin-btn-special .btn-icon {
   color: #1e40af;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  transition: all 0.2s;
+  width: 24px;
+  height: 24px;
 }
 
-.vip-admin-card-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
+
 
 
 
