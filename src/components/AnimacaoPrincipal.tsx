@@ -25,7 +25,9 @@ export const AnimacaoPrincipal: React.FC = () => {
     rsvp_link: '#'
   });
 
-  const vipNames = ["Kallewfel", "Mrita"]; // Substitua pelos nomes desejados
+  const [introStage, setIntroStage] = useState<'idle' | 'book-closed' | 'book-opening' | 'envelope-rising' | 'finished'>('idle');
+
+  const vipNames = ["Kallewfel", "Mrita", "AlineBelo"]; // Substitua pelos nomes desejados
 
   const conviteImageUrl = ""; // Placeholder vazio para a div azul
 
@@ -40,7 +42,7 @@ export const AnimacaoPrincipal: React.FC = () => {
 
     if (savedName) {
       setGuestName(savedName);
-      // Se já tem nome, pula o envelope E abre o convite grande
+      setIntroStage('finished');
       setIsOpen(true);
       setIsDetailedView(true);
     } else {
@@ -76,13 +78,16 @@ export const AnimacaoPrincipal: React.FC = () => {
     setGuestName(name);
     localStorage.setItem("guestName", name);
     setIsNameModalOpen(false);
+    setIntroStage('book-closed');
+
+    // Inicia sequência cinematográfica
+    setTimeout(() => setIntroStage('book-opening'), 1000);
+    setTimeout(() => setIntroStage('envelope-rising'), 2500);
+    setTimeout(() => setIntroStage('finished'), 4500);
   };
 
   const showGifts = () => {
-    setIsDetailedView(false);
-    setTimeout(() => {
-      setIsGiftsModalOpen(true);
-    }, 100);
+    setIsGiftsModalOpen(true);
   };
 
   const handleOpenEnvelope = () => {
@@ -146,9 +151,79 @@ export const AnimacaoPrincipal: React.FC = () => {
         ))}
       </div>
 
+      {/* Animação do Livro */}
+      <AnimatePresence>
+        {introStage !== 'finished' && introStage !== 'idle' && (
+          <div className="book-container">
+            <motion.div
+              className="book"
+              initial={{ x: 0 }}
+              animate={{ x: introStage === 'envelope-rising' ? -300 : 0, opacity: introStage === 'envelope-rising' ? 0 : 1 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+            >
+              <motion.div 
+                className="book-cover"
+                initial={{ rotateY: 0 }}
+                animate={{ rotateY: introStage === 'book-closed' ? 0 : -160 }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+              >
+                <img src="/capa-livro.png" alt="Capa" />
+              </motion.div>
+
+              {/* Camadas de Páginas Extras - Alternando Imagens */}
+              {[1, 2, 3, 4, 5, 6].map((i) => {
+                const imgNum = (i % 3) === 0 ? '' : (i % 3) + 1;
+                const imgSrc = i === 1 ? '/outras-paginas.png' : 
+                               i === 2 ? '/outras-paginas2.png' : 
+                               i === 3 ? '/outras-paginas3.png' :
+                               i === 4 ? '/outras-paginas.png' :
+                               i === 5 ? '/outras-paginas2.png' : '/outras-paginas3.png';
+                
+                return (
+                  <motion.div
+                    key={i}
+                    className="book-page-layer"
+                    initial={{ rotateY: 0 }}
+                    animate={{ rotateY: introStage === 'book-closed' ? 0 : -158 + (i * 3) }}
+                    transition={{ duration: 1.5 + (i * 0.08), ease: "easeInOut", delay: 0.05 * i }}
+                  >
+                    <img src={imgSrc} alt={`Página ${i}`} />
+                  </motion.div>
+                );
+              })}
+
+              <div className="book-page">
+                <img src="/pagina-livro.png" alt="Página" />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Esconde o envelope e as dicas quando o convite grande está aberto */}
-      {!isDetailedView && (
-        <>
+      {!isDetailedView && (introStage === 'envelope-rising' || introStage === 'finished') && (
+        <motion.div
+          className="envelope-intro-wrapper"
+          initial={introStage === 'envelope-rising' ? {
+            scale: 0.15,
+            rotate: -25,
+            y: 50,
+            x: 20,
+            opacity: 0
+          } : { scale: 1, rotate: 0, y: 0, x: 0, opacity: 1 }}
+          animate={{
+            scale: 1,
+            rotate: 0,
+            y: 0,
+            x: 0,
+            opacity: 1
+          }}
+          transition={{ duration: 1.5, ease: [0.34, 1.56, 0.64, 1], delay: 0.2 }}
+          style={{ 
+            zIndex: 100, 
+            position: 'relative' 
+          }}
+        >
           <Envelope isOpen={isOpen} onClick={handleOpenEnvelope} guestName={guestName}>
             <Convite
               isOpen={isOpen}
@@ -160,19 +235,8 @@ export const AnimacaoPrincipal: React.FC = () => {
             />
           </Envelope>
 
-          {!isOpen && <div className="hint-text">Toque no envelope para abrir</div>}
-
-          {isOpen && (
-            <motion.div
-              className="hint-text"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              transition={{ delay: 2 }}
-            >
-              Toque no convite para ampliar
-            </motion.div>
-          )}
-        </>
+          {!isOpen && introStage === 'finished' && <div className="hint-text">Toque no envelope para abrir</div>}
+        </motion.div>
       )}
 
       {/* Visualização Detalhada (Modal) */}
@@ -221,17 +285,17 @@ export const AnimacaoPrincipal: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <div style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    justifyContent: 'flex-start', 
-                    height: '100%', 
-                    padding: '12px 20px', 
-                    textAlign: 'center' 
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    height: '100%',
+                    padding: '12px 20px',
+                    textAlign: 'center'
                   }}>
-                    <h1 style={{ 
-                      color: '#1e40af', 
+                    <h1 style={{
+                      color: '#1e40af',
                       marginBottom: '15px',
                       fontSize: settings.invitation_title === 'carregando...' ? '0.9rem' : '2.2rem',
                       opacity: settings.invitation_title === 'carregando...' ? 0.5 : 1,
@@ -239,9 +303,9 @@ export const AnimacaoPrincipal: React.FC = () => {
                     }}>
                       {settings.invitation_title}
                     </h1>
-                    <p style={{ 
-                      color: '#64748b', 
-                      fontSize: '1.2rem', 
+                    <p style={{
+                      color: '#64748b',
+                      fontSize: '1.2rem',
                       lineHeight: '1.8',
                       opacity: settings.invitation_body === '...' ? 0.3 : 1,
                       maxWidth: '90%'
@@ -299,7 +363,7 @@ export const AnimacaoPrincipal: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsGiftsModalOpen(false)}
-            style={{ zIndex: 200 }}
+            style={{ zIndex: 2000 }}
           >
             <motion.div
               className="modal-content gifts-modal"
