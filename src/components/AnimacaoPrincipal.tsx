@@ -31,7 +31,6 @@ export const AnimacaoPrincipal: React.FC = () => {
 
     // Check localStorage
     const savedName = localStorage.getItem("guestName");
-    const wasOpened = localStorage.getItem("invitationOpened") === "true";
 
     if (savedName) {
       setGuestName(savedName);
