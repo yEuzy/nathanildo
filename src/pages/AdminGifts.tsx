@@ -42,7 +42,7 @@ export const AdminGifts: React.FC = () => {
 
     const loadData = async () => {
       setLoading(true);
-      
+
       // Load Gifts
       const { data: giftsData } = await supabase
         .from('gifts')
@@ -181,7 +181,7 @@ export const AdminGifts: React.FC = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Link RSVP (WhatsApp)</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Link confirmação</label>
               <input
                 type="text"
                 value={settings.rsvp_link}
@@ -190,7 +190,7 @@ export const AdminGifts: React.FC = () => {
               />
             </div>
           </div>
-          <button 
+          <button
             onClick={saveAllSettings}
             disabled={isSavingSettings}
             style={{
@@ -331,14 +331,14 @@ export const AdminGifts: React.FC = () => {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '40px' }}>
-        <button 
-          onClick={() => navigate('/convite')} 
-          style={{ 
-            background: 'rgba(255, 255, 255, 0.1)', 
-            border: '1px solid rgba(255,255,255,0.3)', 
-            color: 'white', 
-            padding: '12px 24px', 
-            borderRadius: '12px', 
+        <button
+          onClick={() => navigate('/convite')}
+          style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '12px',
             cursor: 'pointer',
             display: 'inline-flex',
             alignItems: 'center',

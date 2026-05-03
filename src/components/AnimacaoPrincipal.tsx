@@ -19,7 +19,7 @@ export const AnimacaoPrincipal: React.FC = () => {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [settings, setSettings] = useState({
-    invitation_title: 'CARREGANDO...',
+    invitation_title: 'carregando...',
     invitation_body: '...',
     location_url: '#',
     rsvp_link: '#'
@@ -221,9 +221,33 @@ export const AnimacaoPrincipal: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <h1 style={{ color: '#1e40af', marginBottom: '15px' }}>{settings.invitation_title}</h1>
-                    <p style={{ color: '#64748b', fontSize: '1.1rem', lineHeight: '1.6' }}>{settings.invitation_body}</p>
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'flex-start', 
+                    height: '100%', 
+                    padding: '12px 20px', 
+                    textAlign: 'center' 
+                  }}>
+                    <h1 style={{ 
+                      color: '#1e40af', 
+                      marginBottom: '15px',
+                      fontSize: settings.invitation_title === 'carregando...' ? '0.9rem' : '2.2rem',
+                      opacity: settings.invitation_title === 'carregando...' ? 0.5 : 1,
+                      fontFamily: settings.invitation_title === 'carregando...' ? 'inherit' : "'Dancing Script', cursive"
+                    }}>
+                      {settings.invitation_title}
+                    </h1>
+                    <p style={{ 
+                      color: '#64748b', 
+                      fontSize: '1.2rem', 
+                      lineHeight: '1.8',
+                      opacity: settings.invitation_body === '...' ? 0.3 : 1,
+                      maxWidth: '90%'
+                    }}>
+                      {settings.invitation_body}
+                    </p>
                   </div>
                 )}
               </div>
@@ -233,14 +257,14 @@ export const AnimacaoPrincipal: React.FC = () => {
                   className="action-btn"
                   onClick={() => {
                     const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan!`);
-                    const finalLink = settings.rsvp_link.includes('?') 
+                    const finalLink = settings.rsvp_link.includes('?')
                       ? `${settings.rsvp_link}&text=${message}`
                       : `${settings.rsvp_link}?text=${message}`;
                     window.open(finalLink, '_blank');
                   }}
                 >
                   <img src="/001.png" alt="RSVP" className="btn-icon" />
-                  <span>RSVP</span>
+                  <span>Confirmar</span>
                 </button>
                 <button
                   className="action-btn"

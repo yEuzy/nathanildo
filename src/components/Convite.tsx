@@ -43,9 +43,33 @@ export const Convite: React.FC<ConviteProps> = ({
       {imageUrl ? (
         <img src={imageUrl} alt="Convite" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '20px', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '1.2rem', marginBottom: '10px', color: '#1e40af' }}>{title || 'NOSSO CONVITE'}</h1>
-          <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{body || 'Carregando detalhes...'}</p>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'flex-start', 
+          height: '100%', 
+          padding: '12px 20px', 
+          textAlign: 'center' 
+        }}>
+          <h1 style={{ 
+            fontSize: title === 'carregando...' ? '0.7rem' : '1.2rem', 
+            marginBottom: '10px', 
+            color: '#1e40af',
+            opacity: title === 'carregando...' ? 0.4 : 1,
+            marginTop: '0px'
+          }}>
+            {title || 'carregando...'}
+          </h1>
+          <p style={{ 
+            fontSize: '0.65rem', 
+            color: '#64748b',
+            opacity: title === 'carregando...' ? 0.3 : 1,
+            lineHeight: '1.4',
+            maxWidth: '90%'
+          }}>
+            {body || '...'}
+          </p>
         </div>
       )}
     </motion.div>
