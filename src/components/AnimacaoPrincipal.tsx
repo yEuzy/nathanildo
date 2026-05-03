@@ -137,19 +137,6 @@ export const AnimacaoPrincipal: React.FC = () => {
         />
       </Envelope>
 
-      {/* Botão VIP para nomes específicos */}
-      {vipNames.includes(guestName) && (
-        <motion.button
-          className="vip-admin-btn"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => navigate("/admin-presentes")}
-          title="Gerenciar Presentes"
-        >
-          <GiftIcon size={20} />
-        </motion.button>
-      )}
-
       {!isOpen && <div className="hint-text">Toque no envelope para abrir</div>}
 
       {isOpen && !isDetailedView && (
@@ -187,14 +174,25 @@ export const AnimacaoPrincipal: React.FC = () => {
             >
               {localStorage.getItem("invitationOpened") !== "true" && (
                 <button
-                  className="close-modal"
-                  onClick={() => setIsDetailedView(false)}
-                >
-                  <X size={24} />
-                </button>
-              )}
+                className="close-modal"
+                onClick={() => setIsDetailedView(false)}
+              >
+                <X size={24} />
+              </button>
+            )}
 
-              <div className="modal-card-display">
+            {/* Botão VIP dentro do convite ampliado */}
+            {vipNames.includes(guestName) && (
+              <button
+                className="vip-admin-card-btn"
+                onClick={() => navigate("/admin-presentes")}
+                title="Gerenciar Presentes"
+              >
+                <GiftIcon size={20} />
+              </button>
+            )}
+
+            <div className="modal-card-display">
                 {conviteImageUrl ? (
                   <img
                     src={conviteImageUrl}

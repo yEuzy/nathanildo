@@ -416,29 +416,29 @@ html, body {
   padding: 30px !important;
 }
 
-/* VIP Admin Button */
-.vip-admin-btn {
+/* VIP Admin Button (Inside Card) */
+.vip-admin-card-btn {
   position: absolute;
-  top: 20px;
-  left: 20px;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  top: 15px;
+  left: 15px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1e40af;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 100;
+  z-index: 10;
   transition: all 0.2s;
 }
 
-.vip-admin-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
+.vip-admin-card-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
+
 
 
