@@ -13,7 +13,6 @@ export const Envelope: React.FC<EnvelopeProps> = ({ isOpen, onClick, children })
     <motion.div 
       className="envelope-wrapper"
       onClick={!isOpen ? onClick : undefined}
-      // Animação de descida para dar espaço ao convite
       animate={{ 
         y: isOpen ? "20dvh" : 0,
         scale: isOpen ? 0.9 : 1
@@ -26,9 +25,15 @@ export const Envelope: React.FC<EnvelopeProps> = ({ isOpen, onClick, children })
       {children}
 
       <div className="envelope-front">
-        <div className="envelope-side-l" />
-        <div className="envelope-side-r" />
-        <div className="envelope-pocket" />
+        <div className="side-l-wrapper">
+          <div className="envelope-side-l" />
+        </div>
+        <div className="side-r-wrapper">
+          <div className="envelope-side-r" />
+        </div>
+        <div className="pocket-wrapper">
+          <div className="envelope-pocket" />
+        </div>
       </div>
 
       <motion.div 
@@ -43,7 +48,7 @@ export const Envelope: React.FC<EnvelopeProps> = ({ isOpen, onClick, children })
         <div className="envelope-flap" />
         {!isOpen && (
           <div className="envelope-seal">
-            <Heart size={22} fill="white" color="white" />
+            <Heart size={30} fill="white" color="white" />
           </div>
         )}
       </motion.div>
