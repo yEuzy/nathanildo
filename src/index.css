@@ -411,10 +411,15 @@ html, body {
 
 /* Name Modal */
 .name-modal {
-  max-width: 350px !important;
-  border-radius: 24px !important;
-  padding: 30px !important;
+  max-width: 380px !important;
+  border-radius: 28px !important;
+  padding: 40px !important;
+  background: linear-gradient(135deg, #fffcf0 0%, #ffffff 100%) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  text-align: center;
 }
+
 
 /* VIP Admin Button (Inside Card) */
 .vip-admin-card-btn {

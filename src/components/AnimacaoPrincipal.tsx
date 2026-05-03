@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Gift as GiftIcon } from "lucide-react";
+import { X, Gift as GiftIcon, Heart } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import { Envelope } from "./Envelope";
@@ -333,17 +333,22 @@ export const AnimacaoPrincipal: React.FC = () => {
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
             >
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+                <Heart size={40} fill="#ff9a9e" color="#ff9a9e" style={{ opacity: 0.8 }} />
+              </div>
               <h2
                 style={{
                   color: "#1e40af",
-                  marginBottom: "15px",
+                  marginBottom: "10px",
                   textAlign: "center",
+                  fontFamily: "'Dancing Script', cursive",
+                  fontSize: "2rem"
                 }}
               >
                 Bem-vindo!
               </h2>
-              <p style={{ textAlign: "center", marginBottom: "20px" }}>
-                Como devemos te chamar?
+              <p style={{ textAlign: "center", marginBottom: "25px", color: "#64748b" }}>
+                Para começar, como devemos te chamar?
               </p>
               <form
                 onSubmit={(e) => {
