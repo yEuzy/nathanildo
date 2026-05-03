@@ -320,32 +320,42 @@ html, body {
 .gifts-modal {
   background: #fdfcf0 !important;
   max-width: 450px !important;
-  max-height: 80dvh;
+  max-height: 85dvh;
   display: flex;
   flex-direction: column;
+  border-radius: 32px !important;
+  padding: 35px 25px !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
 
 .gifts-list-container {
   flex: 1;
   overflow-y: auto;
   padding: 10px 5px;
+  margin-top: 10px;
 }
 
 .gifts-scroll {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 15px;
 }
 
 .gift-item-card {
   background: white;
-  padding: 15px;
-  border-radius: 12px;
+  padding: 20px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  gap: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease;
+}
+
+.gift-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
 }
 
 .gift-info {

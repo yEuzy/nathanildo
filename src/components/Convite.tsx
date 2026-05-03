@@ -6,13 +6,17 @@ interface ConviteProps {
   isDetailedView: boolean;
   onOpenDetail: () => void;
   imageUrl?: string;
+  title?: string;
+  body?: string;
 }
 
 export const Convite: React.FC<ConviteProps> = ({ 
   isOpen, 
   isDetailedView, 
   onOpenDetail, 
-  imageUrl 
+  imageUrl,
+  title,
+  body
 }) => {
   return (
     <motion.div
@@ -39,7 +43,10 @@ export const Convite: React.FC<ConviteProps> = ({
       {imageUrl ? (
         <img src={imageUrl} alt="Convite" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
       ) : (
-        <span>SEU CONVITE<br/>AQUI</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '20px', textAlign: 'center' }}>
+          <h1 style={{ fontSize: '1.2rem', marginBottom: '10px', color: '#1e40af' }}>{title || 'NOSSO CONVITE'}</h1>
+          <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{body || 'Carregando detalhes...'}</p>
+        </div>
       )}
     </motion.div>
   );

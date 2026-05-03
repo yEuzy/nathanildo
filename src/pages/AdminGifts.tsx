@@ -13,6 +13,15 @@ export const AdminGifts: React.FC = () => {
   const [newLink, setNewLink] = useState('');
   const [newPrice, setNewPrice] = useState('');
 
+  // Event Settings State
+  const [settings, setSettings] = useState({
+    invitation_title: '',
+    invitation_body: '',
+    location_url: '',
+    rsvp_link: ''
+  });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
   const fetchGifts = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -31,26 +40,59 @@ export const AdminGifts: React.FC = () => {
   useEffect(() => {
     let ignore = false;
 
-    const loadGifts = async () => {
+    const loadData = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Load Gifts
+      const { data: giftsData } = await supabase
         .from('gifts')
         .select('*')
         .order('created_at', { ascending: false });
 
+      // Load Settings
+      const { data: settingsData } = await supabase
+        .from('event_settings')
+        .select('*');
+
       if (!ignore) {
-        if (error) {
-          console.error('Erro ao buscar presentes:', error);
-        } else {
-          setGifts(data || []);
+        if (giftsData) setGifts(giftsData);
+        if (settingsData) {
+          const s: any = {};
+          settingsData.forEach(item => {
+            s[item.key] = item.value;
+          });
+          setSettings(prev => ({ ...prev, ...s }));
         }
         setLoading(false);
       }
     };
 
-    loadGifts();
+    loadData();
     return () => { ignore = true; };
   }, [fetchGifts]);
+
+  const handleUpdateSetting = async (key: string, value: string) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const saveAllSettings = async () => {
+    setIsSavingSettings(true);
+    const updates = Object.entries(settings).map(([key, value]) => ({
+      key,
+      value
+    }));
+
+    const { error } = await supabase
+      .from('event_settings')
+      .upsert(updates, { onConflict: 'key' });
+
+    if (error) {
+      alert('Erro ao salvar configurações');
+    } else {
+      alert('Configurações salvas com sucesso!');
+    }
+    setIsSavingSettings(false);
+  };
 
   const handleAddGift = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,9 +135,79 @@ export const AdminGifts: React.FC = () => {
     }}>
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h1 style={{ color: '#ffeb95', fontSize: '2.5rem', marginBottom: '10px', textShadow: '2px 2px 0 #000' }}>
-          Painel de Presentes
+          Painel Administrativo
         </h1>
-        <p style={{ color: 'white', opacity: 0.8 }}>Adicione sugestões que aparecerão para os convidados</p>
+        <p style={{ color: 'white', opacity: 0.8 }}>Gerencie o conteúdo do convite e a lista de presentes</p>
+      </div>
+
+      {/* Seção de Configurações do Convite */}
+      <div style={{
+        background: 'white',
+        padding: '30px',
+        borderRadius: '24px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+        marginBottom: '40px'
+      }}>
+        <h2 style={{ color: '#1e293b', marginBottom: '20px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          📝 Conteúdo do Convite
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Título do Convite</label>
+            <input
+              type="text"
+              value={settings.invitation_title}
+              onChange={(e) => handleUpdateSetting('invitation_title', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Texto Interno</label>
+            <textarea
+              rows={3}
+              value={settings.invitation_body}
+              onChange={(e) => handleUpdateSetting('invitation_body', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Link do Google Maps</label>
+              <input
+                type="text"
+                value={settings.location_url}
+                onChange={(e) => handleUpdateSetting('location_url', e.target.value)}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Link RSVP (WhatsApp)</label>
+              <input
+                type="text"
+                value={settings.rsvp_link}
+                onChange={(e) => handleUpdateSetting('rsvp_link', e.target.value)}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+          <button 
+            onClick={saveAllSettings}
+            disabled={isSavingSettings}
+            style={{
+              padding: '14px',
+              background: '#059669',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: 700,
+              marginTop: '10px',
+              opacity: isSavingSettings ? 0.7 : 1
+            }}
+          >
+            {isSavingSettings ? 'Salvando...' : 'Atualizar Informações do Convite'}
+          </button>
+        </div>
       </div>
 
       <div style={{
@@ -105,7 +217,9 @@ export const AdminGifts: React.FC = () => {
         boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
         marginBottom: '40px'
       }}>
-        <h2 style={{ color: '#1e293b', marginBottom: '20px', fontSize: '1.2rem' }}>Novo Presente</h2>
+        <h2 style={{ color: '#1e293b', marginBottom: '20px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          🎁 Novo Presente
+        </h2>
         <form onSubmit={handleAddGift} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
           <div style={{ gridColumn: 'span 2' }}>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Nome do Item *</label>

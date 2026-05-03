@@ -18,8 +18,14 @@ export const AnimacaoPrincipal: React.FC = () => {
   const [guestName, setGuestName] = useState("");
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [gifts, setGifts] = useState<Gift[]>([]);
+  const [settings, setSettings] = useState({
+    invitation_title: 'CARREGANDO...',
+    invitation_body: '...',
+    location_url: '#',
+    rsvp_link: '#'
+  });
 
-  const vipNames = ["Kallewfel", "MriaRta"]; // Substitua pelos nomes desejados
+  const vipNames = ["Kallewfel", "Mrita"]; // Substitua pelos nomes desejados
 
   const conviteImageUrl = ""; // Placeholder vazio para a div azul
 
@@ -41,14 +47,26 @@ export const AnimacaoPrincipal: React.FC = () => {
       setIsNameModalOpen(true);
     }
 
-    const loadGifts = async () => {
-      const { data } = await supabase.from("gifts").select("*").order("name");
-      if (!ignore && data) {
-        setGifts(data);
+    const loadData = async () => {
+      // Load Gifts
+      const { data: giftsData } = await supabase.from("gifts").select("*").order("name");
+
+      // Load Settings
+      const { data: settingsData } = await supabase.from("event_settings").select("*");
+
+      if (!ignore) {
+        if (giftsData) setGifts(giftsData);
+        if (settingsData) {
+          const s: any = {};
+          settingsData.forEach(item => {
+            s[item.key] = item.value;
+          });
+          setSettings(prev => ({ ...prev, ...s }));
+        }
       }
     };
 
-    loadGifts();
+    loadData();
     return () => {
       ignore = true;
     };
@@ -128,26 +146,33 @@ export const AnimacaoPrincipal: React.FC = () => {
         ))}
       </div>
 
-      <Envelope isOpen={isOpen} onClick={handleOpenEnvelope} guestName={guestName}>
-        <Convite
-          isOpen={isOpen}
-          isDetailedView={isDetailedView}
-          onOpenDetail={() => setIsDetailedView(true)}
-          imageUrl={conviteImageUrl}
-        />
-      </Envelope>
+      {/* Esconde o envelope e as dicas quando o convite grande está aberto */}
+      {!isDetailedView && (
+        <>
+          <Envelope isOpen={isOpen} onClick={handleOpenEnvelope} guestName={guestName}>
+            <Convite
+              isOpen={isOpen}
+              isDetailedView={isDetailedView}
+              onOpenDetail={() => setIsDetailedView(true)}
+              imageUrl={conviteImageUrl}
+              title={settings.invitation_title}
+              body={settings.invitation_body}
+            />
+          </Envelope>
 
-      {!isOpen && <div className="hint-text">Toque no envelope para abrir</div>}
+          {!isOpen && <div className="hint-text">Toque no envelope para abrir</div>}
 
-      {isOpen && !isDetailedView && (
-        <motion.div
-          className="hint-text"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.6 }}
-          transition={{ delay: 2 }}
-        >
-          Toque no convite para ampliar
-        </motion.div>
+          {isOpen && (
+            <motion.div
+              className="hint-text"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              transition={{ delay: 2 }}
+            >
+              Toque no convite para ampliar
+            </motion.div>
+          )}
+        </>
       )}
 
       {/* Visualização Detalhada (Modal) */}
@@ -174,16 +199,16 @@ export const AnimacaoPrincipal: React.FC = () => {
             >
               {localStorage.getItem("invitationOpened") !== "true" && (
                 <button
-                className="close-modal"
-                onClick={() => setIsDetailedView(false)}
-              >
-                <X size={24} />
-              </button>
-            )}
+                  className="close-modal"
+                  onClick={() => setIsDetailedView(false)}
+                >
+                  <X size={24} />
+                </button>
+              )}
 
-            {/* Botão VIP dentro do convite ampliado */}
+              {/* Botão VIP dentro do convite ampliado */}
 
-            <div className="modal-card-display">
+              <div className="modal-card-display">
                 {conviteImageUrl ? (
                   <img
                     src={conviteImageUrl}
@@ -196,25 +221,24 @@ export const AnimacaoPrincipal: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <span>
-                    DETALHES DO
-                    <br />
-                    CONVITE
-                  </span>
+                  <div style={{ padding: '20px', textAlign: 'center' }}>
+                    <h1 style={{ color: '#1e40af', marginBottom: '15px' }}>{settings.invitation_title}</h1>
+                    <p style={{ color: '#64748b', fontSize: '1.1rem', lineHeight: '1.6' }}>{settings.invitation_body}</p>
+                  </div>
                 )}
               </div>
 
               <div className="action-buttons-modal">
                 <button
                   className="action-btn"
-                  onClick={() => alert("Confirmado!")}
+                  onClick={() => window.open(settings.rsvp_link, '_blank')}
                 >
                   <img src="/001.png" alt="RSVP" className="btn-icon" />
                   <span>RSVP</span>
                 </button>
                 <button
                   className="action-btn"
-                  onClick={() => alert("Abrindo mapa...")}
+                  onClick={() => window.open(settings.location_url, '_blank')}
                 >
                   <img src="/025.png" alt="Local" className="btn-icon" />
                   <span>Local</span>
@@ -266,9 +290,11 @@ export const AnimacaoPrincipal: React.FC = () => {
                   color: "#1e40af",
                   marginBottom: "20px",
                   textAlign: "center",
+                  fontFamily: "'Dancing Script', cursive",
+                  fontSize: "2.2rem"
                 }}
               >
-                Dicas de Presentes
+                Sugestões de Presentes
               </h2>
 
               <div className="gifts-list-container">
