@@ -231,7 +231,13 @@ export const AnimacaoPrincipal: React.FC = () => {
               <div className="action-buttons-modal">
                 <button
                   className="action-btn"
-                  onClick={() => window.open(settings.rsvp_link, '_blank')}
+                  onClick={() => {
+                    const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan!`);
+                    const finalLink = settings.rsvp_link.includes('?') 
+                      ? `${settings.rsvp_link}&text=${message}`
+                      : `${settings.rsvp_link}?text=${message}`;
+                    window.open(finalLink, '_blank');
+                  }}
                 >
                   <img src="/001.png" alt="RSVP" className="btn-icon" />
                   <span>RSVP</span>
