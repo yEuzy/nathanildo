@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Gift as GiftIcon } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
 import { Envelope } from "./Envelope";
 import { Convite } from "./Convite";
 import { supabase } from "../lib/supabase";
 import type { Gift } from "../types";
 
 export const AnimacaoPrincipal: React.FC = () => {
+  const navigate = useNavigate();
   const [isReady, setIsReady] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDetailedView, setIsDetailedView] = useState(false);
@@ -16,6 +18,8 @@ export const AnimacaoPrincipal: React.FC = () => {
   const [guestName, setGuestName] = useState("");
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [gifts, setGifts] = useState<Gift[]>([]);
+
+  const vipNames = ["Kallewfel", "MriaRta"]; // Substitua pelos nomes desejados
 
   const conviteImageUrl = ""; // Placeholder vazio para a div azul
 
@@ -31,12 +35,11 @@ export const AnimacaoPrincipal: React.FC = () => {
 
     if (savedName) {
       setGuestName(savedName);
+      // Se já tem nome, pula o envelope E abre o convite grande
+      setIsOpen(true);
+      setIsDetailedView(true);
     } else {
       setIsNameModalOpen(true);
-    }
-
-    if (wasOpened) {
-      setIsOpen(true);
     }
 
     const loadGifts = async () => {
@@ -135,6 +138,19 @@ export const AnimacaoPrincipal: React.FC = () => {
         />
       </Envelope>
 
+      {/* Botão VIP para nomes específicos */}
+      {vipNames.includes(guestName) && (
+        <motion.button
+          className="vip-admin-btn"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => navigate("/admin-presentes")}
+          title="Gerenciar Presentes"
+        >
+          <GiftIcon size={20} />
+        </motion.button>
+      )}
+
       {!isOpen && <div className="hint-text">Toque no envelope para abrir</div>}
 
       {isOpen && !isDetailedView && (
@@ -157,7 +173,11 @@ export const AnimacaoPrincipal: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setIsDetailedView(false)}
+            onClick={() => {
+              if (localStorage.getItem("invitationOpened") !== "true") {
+                setIsDetailedView(false);
+              }
+            }}
           >
             <motion.div
               className="modal-content"
@@ -166,12 +186,14 @@ export const AnimacaoPrincipal: React.FC = () => {
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                className="close-modal"
-                onClick={() => setIsDetailedView(false)}
-              >
-                <X size={24} />
-              </button>
+              {localStorage.getItem("invitationOpened") !== "true" && (
+                <button
+                  className="close-modal"
+                  onClick={() => setIsDetailedView(false)}
+                >
+                  <X size={24} />
+                </button>
+              )}
 
               <div className="modal-card-display">
                 {conviteImageUrl ? (

@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Gift } from '../types';
-import { Trash2, Plus, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Loader2, ArrowLeft } from 'lucide-react';
 
 export const AdminGifts: React.FC = () => {
+  const navigate = useNavigate();
   const [gifts, setGifts] = useState<Gift[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
   const [newLink, setNewLink] = useState('');
@@ -214,11 +217,26 @@ export const AdminGifts: React.FC = () => {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '40px' }}>
-        <button
-          onClick={() => window.location.href = '/convite'}
-          style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer' }}
+        <button 
+          onClick={() => navigate('/convite')} 
+          style={{ 
+            background: 'rgba(255, 255, 255, 0.1)', 
+            border: '1px solid rgba(255,255,255,0.3)', 
+            color: 'white', 
+            padding: '12px 24px', 
+            borderRadius: '12px', 
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
         >
-          Voltar para o Convite
+          <ArrowLeft size={18} /> Voltar para o Convite
         </button>
       </div>
     </div>
