@@ -1,0 +1,303 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-color: #161b22; /* Mudado de #1e2430 para teste de cache */
+  --text-color: #e2e8f0;
+  --envelope-body: #fdf6e3;
+  --envelope-flap: #fcf4db;
+  --placeholder-blue: #4a90e2;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  overflow-x: hidden; /* Proibir scroll lateral */
+  font-family: 'Fredoka', sans-serif;
+}
+
+.app-container {
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 20px;
+}
+
+/* Partículas simplificadas para performance */
+.particles-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: float-up infinite linear;
+}
+
+@keyframes float-up {
+  0% { transform: translateY(110dvh) scale(0.5); opacity: 0; }
+  100% { transform: translateY(-10dvh) scale(1.2); opacity: 0.4; }
+}
+
+/* Envelope Structure */
+.envelope-wrapper {
+  position: relative;
+  width: 85dvw;
+  max-width: 380px;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  z-index: 10;
+  cursor: pointer;
+  perspective: 1200px;
+  /* Garantir que o limite externo seja visível com traço cartoon */
+  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000);
+}
+
+.envelope-back {
+  position: absolute;
+  inset: 0;
+  background-color: #f0e4c8;
+  border-radius: 4px;
+  /* Stroke preto grosso estilo cartoon */
+  filter: drop-shadow(2.5px 0 0 #000) drop-shadow(-2.5px 0 0 #000) drop-shadow(0 2.5px 0 #000) drop-shadow(0 -2.5px 0 #000);
+  z-index: 1;
+}
+
+.envelope-front {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.envelope-pocket {
+  position: absolute;
+  inset: 0;
+  background-color: var(--envelope-body);
+  clip-path: polygon(0 40%, 50% 100%, 100% 40%, 100% 100%, 0 100%);
+  border-radius: 0 0 4px 4px;
+  z-index: 4;
+  /* Stroke preto no bolso */
+  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000);
+}
+
+.envelope-side-l, .envelope-side-r {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background-color: #f4e8ce;
+  /* Stroke preto nas laterais */
+  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000);
+}
+.envelope-side-l { 
+  clip-path: polygon(0 0, 100% 50%, 0 100%); 
+  border-radius: 4px 0 0 4px;
+}
+.envelope-side-r { 
+  clip-path: polygon(100% 0, 0 50%, 100% 100%); 
+  border-radius: 0 4px 4px 0;
+}
+
+.envelope-flap-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  transform-origin: top;
+  z-index: 5;
+  transform-style: preserve-3d;
+}
+
+.envelope-flap {
+  width: 100%;
+  height: 100%;
+  background-color: var(--envelope-flap);
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+  border-radius: 4px 4px 0 0;
+  /* Stroke preto na aba */
+  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000);
+}
+
+.envelope-seal {
+  position: absolute;
+  bottom: -20px; /* Transborda o triângulo sem ser cortado */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  border: 2px solid white;
+}
+
+/* O Cartão do Convite */
+.invitation-card {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  background-color: var(--placeholder-blue);
+  border-radius: 4px;
+  z-index: 2;
+  /* Stroke preto no cartão também */
+  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  padding: 15px;
+}
+
+/* Modal View */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 30, 0.9);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px; /* Reduzi o gap para caber os botões */
+}
+
+.modal-card-display {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background-color: var(--placeholder-blue);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+/* Container de Botões no Modal */
+.action-buttons-modal {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.action-btn {
+  flex: 1;
+  max-width: 110px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  border: none;
+  padding: 10px 2px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: white;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.8rem; /* Usei rem para estabilidade no modal */
+  cursor: pointer;
+  /* Estilo Cartoon Stroke */
+  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000);
+  transition: transform 0.2s;
+}
+
+.close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: white;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.hint-text {
+  position: absolute;
+  bottom: 4dvh; /* Subi um pouco para não bater nos botões */
+  color: var(--text-color);
+  opacity: 0.6;
+  font-weight: 500;
+  text-align: center;
+  font-size: 3.5dvw;
+}
+
+/* Novos Botões de Ação */
+.action-buttons {
+  position: absolute;
+  bottom: 12dvh;
+  display: flex;
+  gap: 3dvw;
+  width: 90dvw;
+  justify-content: center;
+  z-index: 20;
+}
+
+.action-btn {
+  flex: 1;
+  max-width: 120px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  border: none;
+  padding: 12px 5px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: white;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 3dvw;
+  cursor: pointer;
+  /* Estilo Cartoon Stroke */
+  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000);
+  transition: transform 0.2s;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.action-btn span {
+  text-transform: uppercase;
+}
