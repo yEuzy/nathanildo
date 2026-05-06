@@ -18,7 +18,8 @@ export const AdminGifts: React.FC = () => {
     invitation_title: '',
     invitation_body: '',
     location_url: '',
-    rsvp_link: ''
+    rsvp_link: '',
+    invitation_bg_url: ''
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -190,6 +191,61 @@ export const AdminGifts: React.FC = () => {
               />
             </div>
           </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Imagem de Fundo do Convite</label>
+            <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <input
+                  type="text"
+                  value={settings.invitation_bg_url}
+                  onChange={(e) => handleUpdateSetting('invitation_bg_url', e.target.value)}
+                  placeholder="URL da imagem (ex: https://...)"
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    setIsSavingSettings(true);
+                    try {
+                      const fileExt = file.name.split('.').pop();
+                      const fileName = `${Date.now()}.${fileExt}`;
+                      const filePath = `invitations/${fileName}`;
+
+                      const { error: uploadError } = await supabase.storage
+                        .from('images')
+                        .upload(filePath, file);
+
+                      if (uploadError) throw uploadError;
+
+                      const { data: { publicUrl } } = supabase.storage
+                        .from('images')
+                        .getPublicUrl(filePath);
+
+                      handleUpdateSetting('invitation_bg_url', publicUrl);
+                    } catch (error: any) {
+                      console.error('Erro no upload:', error);
+                      alert('Erro ao fazer upload. Certifique-se que o bucket "images" está configurado como público no Supabase.');
+                    } finally {
+                      setIsSavingSettings(false);
+                    }
+                  }}
+                  style={{ fontSize: '0.8rem', color: '#64748b' }}
+                />
+              </div>
+              {settings.invitation_bg_url && (
+                <div style={{ width: '120px', height: '120px', borderRadius: '16px', overflow: 'hidden', border: '2px solid #e2e8f0', background: '#f8fafc', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <img src={settings.invitation_bg_url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              )}
+            </div>
+            <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '8px' }}>
+              Dica: Você pode colar um link ou fazer upload. A imagem substituirá o texto interno por uma arte pronta.
+            </p>
+          </div>
           <button
             onClick={saveAllSettings}
             disabled={isSavingSettings}
@@ -202,7 +258,8 @@ export const AdminGifts: React.FC = () => {
               cursor: 'pointer',
               fontWeight: 700,
               marginTop: '10px',
-              opacity: isSavingSettings ? 0.7 : 1
+              opacity: isSavingSettings ? 0.7 : 1,
+              width: '100%'
             }}
           >
             {isSavingSettings ? 'Salvando...' : 'Atualizar Informações do Convite'}

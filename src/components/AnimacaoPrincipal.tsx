@@ -22,29 +22,49 @@ export const AnimacaoPrincipal: React.FC = () => {
     invitation_title: 'carregando...',
     invitation_body: '...',
     location_url: '#',
-    rsvp_link: '#'
+    rsvp_link: '#',
+    invitation_bg_url: ''
   });
 
   const [introStage, setIntroStage] = useState<'idle' | 'book-closed' | 'book-opening' | 'envelope-rising' | 'finished'>('idle');
 
   const vipNames = ["Kallewfel", "Mrita", "AlineBelo"]; // Substitua pelos nomes desejados
 
-  const conviteImageUrl = ""; // Placeholder vazio para a div azul
 
   const particles = Array.from({ length: 12 });
+
+  const triggerIntroSequence = () => {
+    setIntroStage('book-closed');
+    // Inicia sequência cinematográfica
+    // O livro aparece e fica 3 segundos fechado antes de começar a abrir
+    setTimeout(() => setIntroStage('book-opening'), 3000);
+    setTimeout(() => setIntroSequenceStageEnvelopeRising(), 4500);
+    setTimeout(() => setIntroSequenceStageFinished(), 6500);
+  };
+
+  // Helper functions for timeouts to avoid stale state if needed, 
+  // but since these are simple state setters, it's fine.
+  // Actually, I'll just keep it simple as before but move it.
+
+  const setIntroSequenceStageEnvelopeRising = () => setIntroStage('envelope-rising');
+  const setIntroSequenceStageFinished = () => setIntroStage('finished');
+
+  const handleSaveName = (name: string) => {
+    setGuestName(name);
+    localStorage.setItem("guestName", name);
+    setIsNameModalOpen(false);
+    triggerIntroSequence();
+  };
 
   useEffect(() => {
     setIsReady(true);
     let ignore = false;
 
-    // Check localStorage
     const savedName = localStorage.getItem("guestName");
 
     if (savedName) {
       setGuestName(savedName);
-      setIntroStage('finished');
-      setIsOpen(true);
-      setIsDetailedView(true);
+      triggerIntroSequence();
     } else {
       setIsNameModalOpen(true);
     }
@@ -74,18 +94,6 @@ export const AnimacaoPrincipal: React.FC = () => {
     };
   }, []);
 
-  const handleSaveName = (name: string) => {
-    setGuestName(name);
-    localStorage.setItem("guestName", name);
-    setIsNameModalOpen(false);
-    setIntroStage('book-closed');
-
-    // Inicia sequência cinematográfica
-    setTimeout(() => setIntroStage('book-opening'), 1000);
-    setTimeout(() => setIntroStage('envelope-rising'), 2500);
-    setTimeout(() => setIntroStage('finished'), 4500);
-  };
-
   const showGifts = () => {
     setIsGiftsModalOpen(true);
   };
@@ -99,6 +107,11 @@ export const AnimacaoPrincipal: React.FC = () => {
     setTimeout(() => {
       triggerConfetti();
     }, 1000);
+
+    // Abre a visualização detalhada automaticamente após o convite subir
+    setTimeout(() => {
+      setIsDetailedView(true);
+    }, 1600); // Sincronizado com o tempo de subida (0.4s delay + 0.9s duration + margem)
   };
 
   const triggerConfetti = () => {
@@ -157,8 +170,12 @@ export const AnimacaoPrincipal: React.FC = () => {
           <div className="book-container">
             <motion.div
               className="book"
-              initial={{ x: 0 }}
-              animate={{ x: introStage === 'envelope-rising' ? -300 : 0, opacity: introStage === 'envelope-rising' ? 0 : 1 }}
+              initial={{ x: 0, opacity: 0, scale: 0.8 }}
+              animate={{ 
+                x: introStage === 'envelope-rising' ? -300 : 0, 
+                opacity: introStage === 'envelope-rising' ? 0 : 1,
+                scale: introStage === 'envelope-rising' ? 0.8 : 1
+              }}
               transition={{ duration: 1.5, ease: "easeInOut" }}
             >
               <motion.div 
@@ -228,7 +245,7 @@ export const AnimacaoPrincipal: React.FC = () => {
               isOpen={isOpen}
               isDetailedView={isDetailedView}
               onOpenDetail={() => setIsDetailedView(true)}
-              imageUrl={conviteImageUrl}
+              imageUrl={settings.invitation_bg_url}
               title={settings.invitation_title}
               body={settings.invitation_body}
             />
@@ -255,9 +272,15 @@ export const AnimacaoPrincipal: React.FC = () => {
           >
             <motion.div
               className="modal-content"
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.4, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.4, opacity: 0, y: 50 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 300, 
+                damping: 25,
+                opacity: { duration: 0.2 }
+              }}
               onClick={(e) => e.stopPropagation()}
             >
               {localStorage.getItem("invitationOpened") !== "true" && (
@@ -272,9 +295,9 @@ export const AnimacaoPrincipal: React.FC = () => {
               {/* Botão VIP dentro do convite ampliado */}
 
               <div className="modal-card-display">
-                {conviteImageUrl ? (
+                {settings.invitation_bg_url ? (
                   <img
-                    src={conviteImageUrl}
+                    src={settings.invitation_bg_url}
                     alt="Detalhes"
                     style={{
                       width: "100%",
