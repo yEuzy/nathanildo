@@ -23,7 +23,11 @@ export const AnimacaoPrincipal: React.FC = () => {
     invitation_body: '...',
     location_url: '#',
     rsvp_link: '#',
-    invitation_bg_url: ''
+    invitation_bg_url: '',
+    invitation_title_color: '',
+    invitation_body_color: '',
+    show_gifts_btn: 'true',
+    bg_overlay_opacity: '0'
   });
 
   const [introStage, setIntroStage] = useState<'idle' | 'book-closed' | 'book-opening' | 'envelope-rising' | 'finished'>('idle');
@@ -88,9 +92,46 @@ export const AnimacaoPrincipal: React.FC = () => {
       }
     };
 
+    const fetchGifts = async () => {
+      const { data } = await supabase.from("gifts").select("*").order("name");
+      if (!ignore && data) setGifts(data);
+    };
+
     loadData();
+
+    // Subscribe to realtime database changes for guest view
+    const giftsChannel = supabase
+      .channel('gifts-realtime-client')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gifts' },
+        () => {
+          fetchGifts();
+        }
+      )
+      .subscribe();
+
+    const settingsChannel = supabase
+      .channel('settings-realtime-client')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'event_settings' },
+        (payload) => {
+          const newRow = payload.new as any;
+          if (newRow && newRow.key !== undefined && newRow.value !== undefined) {
+            setSettings(prev => ({
+              ...prev,
+              [newRow.key]: newRow.value
+            }));
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       ignore = true;
+      supabase.removeChannel(giftsChannel);
+      supabase.removeChannel(settingsChannel);
     };
   }, []);
 
@@ -248,6 +289,9 @@ export const AnimacaoPrincipal: React.FC = () => {
               imageUrl={settings.invitation_bg_url}
               title={settings.invitation_title}
               body={settings.invitation_body}
+              titleColor={settings.invitation_title_color}
+              bodyColor={settings.invitation_body_color}
+              bgOverlayOpacity={settings.bg_overlay_opacity}
             />
           </Envelope>
 
@@ -294,48 +338,28 @@ export const AnimacaoPrincipal: React.FC = () => {
 
               {/* Botão VIP dentro do convite ampliado */}
 
-              <div className="modal-card-display">
-                {settings.invitation_bg_url ? (
-                  <img
-                    src={settings.invitation_bg_url}
-                    alt="Detalhes"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      borderRadius: "inherit",
-                    }}
-                  />
-                ) : (
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'flex-start',
-                    height: '100%',
-                    padding: '12px 20px',
-                    textAlign: 'center'
-                  }}>
-                    <h1 style={{
-                      color: '#1e40af',
-                      marginBottom: '15px',
-                      fontSize: settings.invitation_title === 'carregando...' ? '0.9rem' : '2.2rem',
-                      opacity: settings.invitation_title === 'carregando...' ? 0.5 : 1,
-                      fontFamily: settings.invitation_title === 'carregando...' ? 'inherit' : "'Dancing Script', cursive"
-                    }}>
-                      {settings.invitation_title}
-                    </h1>
-                    <p style={{
-                      color: '#64748b',
-                      fontSize: '1.2rem',
-                      lineHeight: '1.8',
-                      opacity: settings.invitation_body === '...' ? 0.3 : 1,
-                      maxWidth: '90%'
-                    }}>
-                      {settings.invitation_body}
-                    </p>
-                  </div>
-                )}
+              <div 
+                className={`modal-card-display ${!settings.invitation_bg_url ? 'text-only' : ''}`}
+                style={settings.invitation_bg_url ? {
+                  backgroundImage: `url(${settings.invitation_bg_url})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                } : {}}
+              >
+                <div 
+                  className="modal-card-text-content"
+                  style={{
+                    backgroundColor: `rgba(0, 0, 0, ${Number(settings.bg_overlay_opacity || 0) / 100})`
+                  }}
+                >
+                  <h1 className={settings.invitation_title === 'carregando...' ? 'loading' : ''} style={settings.invitation_title_color ? { color: settings.invitation_title_color } : {}}>
+                    {settings.invitation_title}
+                  </h1>
+                  <p className={settings.invitation_body === '...' ? 'loading' : ''} style={settings.invitation_body_color ? { color: settings.invitation_body_color } : {}}>
+                    {settings.invitation_body}
+                  </p>
+                </div>
               </div>
 
               <div className="action-buttons-modal">
@@ -359,10 +383,12 @@ export const AnimacaoPrincipal: React.FC = () => {
                   <img src="/025.png" alt="Local" className="btn-icon" />
                   <span>Local</span>
                 </button>
-                <button className="action-btn" onClick={showGifts}>
-                  <img src="/028.png" alt="Dicas" className="btn-icon" />
-                  <span>Dicas</span>
-                </button>
+                {settings.show_gifts_btn !== 'false' && (
+                  <button className="action-btn" onClick={showGifts}>
+                    <img src="/028.png" alt="Dicas" className="btn-icon" />
+                    <span>Dicas</span>
+                  </button>
+                )}
                 {vipNames.includes(guestName) && (
                   <button
                     className="action-btn admin-btn-special"

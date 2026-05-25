@@ -19,7 +19,11 @@ export const AdminGifts: React.FC = () => {
     invitation_body: '',
     location_url: '',
     rsvp_link: '',
-    invitation_bg_url: ''
+    invitation_bg_url: '',
+    invitation_title_color: '',
+    invitation_body_color: '',
+    show_gifts_btn: 'true',
+    bg_overlay_opacity: '0'
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -55,6 +59,8 @@ export const AdminGifts: React.FC = () => {
         .from('event_settings')
         .select('*');
 
+      console.log("SETTINGS DATA FROM DB:", settingsData);
+
       if (!ignore) {
         if (giftsData) setGifts(giftsData);
         if (settingsData) {
@@ -69,7 +75,41 @@ export const AdminGifts: React.FC = () => {
     };
 
     loadData();
-    return () => { ignore = true; };
+
+    // Subscribe to realtime database changes
+    const giftsChannel = supabase
+      .channel('gifts-realtime-admin')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gifts' },
+        () => {
+          fetchGifts();
+        }
+      )
+      .subscribe();
+
+    const settingsChannel = supabase
+      .channel('settings-realtime-admin')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'event_settings' },
+        (payload) => {
+          const newRow = payload.new as any;
+          if (newRow && newRow.key !== undefined && newRow.value !== undefined) {
+            setSettings(prev => ({
+              ...prev,
+              [newRow.key]: newRow.value
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      ignore = true;
+      supabase.removeChannel(giftsChannel);
+      supabase.removeChannel(settingsChannel);
+    };
   }, [fetchGifts]);
 
   const handleUpdateSetting = async (key: string, value: string) => {
@@ -89,8 +129,6 @@ export const AdminGifts: React.FC = () => {
 
     if (error) {
       alert('Erro ao salvar configurações');
-    } else {
-      alert('Configurações salvas com sucesso!');
     }
     setIsSavingSettings(false);
   };
@@ -170,6 +208,68 @@ export const AdminGifts: React.FC = () => {
               onChange={(e) => handleUpdateSetting('invitation_body', e.target.value)}
               style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
             />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', alignItems: 'end' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Cor do Título</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="color"
+                  value={settings.invitation_title_color || '#1e40af'}
+                  onChange={(e) => handleUpdateSetting('invitation_title_color', e.target.value)}
+                  style={{ width: '42px', height: '42px', padding: '0', border: '2px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', boxSizing: 'border-box' }}
+                />
+                <input
+                  type="text"
+                  value={settings.invitation_title_color || '#1e40af'}
+                  onChange={(e) => handleUpdateSetting('invitation_title_color', e.target.value)}
+                  style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box', fontSize: '0.9rem' }}
+                />
+              </div>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Cor do Texto</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="color"
+                  value={settings.invitation_body_color || '#64748b'}
+                  onChange={(e) => handleUpdateSetting('invitation_body_color', e.target.value)}
+                  style={{ width: '42px', height: '42px', padding: '0', border: '2px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', boxSizing: 'border-box' }}
+                />
+                <input
+                  type="text"
+                  value={settings.invitation_body_color || '#64748b'}
+                  onChange={(e) => handleUpdateSetting('invitation_body_color', e.target.value)}
+                  style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box', fontSize: '0.9rem' }}
+                />
+              </div>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Botão de Presentes (Dicas)</label>
+              <select
+                value={settings.show_gifts_btn || 'true'}
+                onChange={(e) => handleUpdateSetting('show_gifts_btn', e.target.value)}
+                style={{ width: '100%', padding: '11px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box', background: 'white', height: '42px', fontSize: '0.85rem', fontWeight: 600 }}
+              >
+                <option value="true">Ativado (Mostrar)</option>
+                <option value="false">Desativado (Ocultar)</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>
+                Escurecer Imagem de Fundo ({settings.bg_overlay_opacity || '0'}%)
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '42px' }}>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={settings.bg_overlay_opacity || '0'}
+                  onChange={(e) => handleUpdateSetting('bg_overlay_opacity', e.target.value)}
+                  style={{ flex: 1, cursor: 'pointer', accentColor: '#10b981' }}
+                />
+              </div>
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
             <div>

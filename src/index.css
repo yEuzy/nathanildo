@@ -69,8 +69,8 @@ html, body {
   z-index: 10;
   cursor: pointer;
   perspective: 1200px;
-  /* Contorno externo mais fino e preto */
-  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000) !important;
+  /* Sombra elegante e suave */
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15)) !important;
 }
 
 .envelope-back {
@@ -99,6 +99,7 @@ html, body {
   position: absolute;
   inset: 0;
   z-index: 4;
+  filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.06));
 }
 
 .envelope-side-l, .envelope-side-r {
@@ -114,7 +115,7 @@ html, body {
   position: absolute;
   inset: 0;
   z-index: 3;
-  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000) !important;
+  filter: drop-shadow(-2px 2px 4px rgba(0, 0, 0, 0.08)) !important;
 }
 .envelope-side-r { 
   clip-path: polygon(100% 0, 50% 60%, 100% 100%); 
@@ -123,7 +124,7 @@ html, body {
   position: absolute;
   inset: 0;
   z-index: 3;
-  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000) !important;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.08)) !important;
 }
 
 .envelope-flap-wrapper {
@@ -135,8 +136,8 @@ html, body {
   transform-origin: top;
   z-index: 5;
   transform-style: preserve-3d;
-  /* Traço aplicado aqui para contornar a aba sem ser cortado */
-  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) !important;
+  /* Sombra suave para a aba */
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15)) !important;
 }
 
 .envelope-flap {
@@ -173,8 +174,8 @@ html, body {
   background-color: #fffcf0;
   border-radius: 4px;
   z-index: 2;
-  /* Traço cartoon na carta */
-  filter: drop-shadow(2px 0 0 #000) drop-shadow(-2px 0 0 #000) drop-shadow(0 2px 0 #000) drop-shadow(0 -2px 0 #000);
+  /* Sombra elegante na carta */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -182,6 +183,49 @@ html, body {
   font-weight: 700;
   text-align: center;
   padding: 15px;
+  overflow: hidden;
+}
+
+.invitation-card-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  width: 100%;
+  padding: 12px 10px;
+  text-align: center;
+  overflow-y: auto;
+  scrollbar-width: none; /* Esconder barra de rolagem */
+}
+
+.invitation-card-text-container::-webkit-scrollbar {
+  display: none;
+}
+
+.invitation-card-text-container h1 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: #1e40af;
+  margin-top: 0px;
+  line-height: 1.2;
+}
+
+.invitation-card-text-container h1.loading {
+  font-size: 0.7rem;
+  opacity: 0.4;
+}
+
+.invitation-card-text-container p {
+  font-size: 0.65rem;
+  color: #64748b;
+  line-height: 1.45;
+  max-width: 95%;
+  word-break: break-word;
+}
+
+.invitation-card-text-container p.loading {
+  opacity: 0.3;
 }
 
 /* Modal View */
@@ -195,6 +239,13 @@ html, body {
   justify-content: center;
   align-items: center;
   padding: 24px;
+  overflow-y: auto; /* Permite scroll se o modal for muito alto */
+}
+
+@media (max-height: 740px) {
+  .modal-overlay {
+    align-items: flex-start;
+  }
 }
 
 .modal-content {
@@ -219,7 +270,53 @@ html, body {
   font-weight: 600;
   color: #1e40af;
   overflow: hidden;
-  border: 2px solid #000;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-card-display.text-only {
+  aspect-ratio: auto;
+  height: auto;
+  min-height: 250px;
+  padding: 0;
+}
+
+.modal-card-text-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 36px 28px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.modal-card-text-content h1 {
+  color: #1e40af;
+  margin-bottom: 16px;
+  font-size: 2.2rem;
+  font-family: 'Dancing Script', cursive;
+  line-height: 1.25;
+}
+
+.modal-card-text-content h1.loading {
+  font-size: 0.9rem;
+  opacity: 0.5;
+  font-family: inherit;
+}
+
+.modal-card-text-content p {
+  color: #64748b;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  max-width: 95%;
+  word-break: break-word;
+}
+
+.modal-card-text-content p.loading {
+  opacity: 0.3;
 }
 
 /* Container de Botões no Modal */
