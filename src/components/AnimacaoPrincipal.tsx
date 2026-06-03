@@ -299,7 +299,7 @@ export const AnimacaoPrincipal: React.FC = () => {
               isDetailedView={isDetailedView}
               onOpenDetail={() => setIsDetailedView(true)}
               imageUrl={settings.invitation_bg_url}
-              title={settings.invitation_title}
+              title={guestName || settings.invitation_title}
               body={settings.invitation_body}
               titleColor={settings.invitation_title_color}
               bodyColor={settings.invitation_body_color}
@@ -360,8 +360,8 @@ export const AnimacaoPrincipal: React.FC = () => {
                     backgroundColor: `rgba(0, 0, 0, ${Number(settings.bg_overlay_opacity || 0) / 100})`
                   }}
                 >
-                  <h1 className={settings.invitation_title === 'carregando...' ? 'loading' : ''} style={settings.invitation_title_color ? { color: settings.invitation_title_color } : {}}>
-                    {settings.invitation_title}
+                  <h1 className={(!guestName && settings.invitation_title === 'carregando...') ? 'loading' : ''} style={settings.invitation_title_color ? { color: settings.invitation_title_color } : {}}>
+                    {guestName || settings.invitation_title}
                   </h1>
                   <p className={settings.invitation_body === '...' ? 'loading' : ''} style={settings.invitation_body_color ? { color: settings.invitation_body_color } : {}}>
                     {settings.invitation_body}
