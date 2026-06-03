@@ -26,13 +26,14 @@ export const Convite: React.FC<ConviteProps> = ({
 }) => {
   return (
     <motion.div
-      className="invitation-card"
-      initial={{ y: 0, opacity: 0 }}
+      layoutId="invitation-card"
+      className={`modal-card-display ${!imageUrl ? 'text-only' : ''}`}
+      initial={{ y: 0, opacity: 0, scale: 0.4 }}
       animate={{ 
         // Move para cima o suficiente para sair do envelope mas ficar na tela
-        y: isOpen ? "-45dvh" : 0, 
+        y: isOpen ? "-35dvh" : 0, 
         opacity: isOpen ? 1 : 0,
-        scale: isOpen ? 1.1 : 0.9,
+        scale: isOpen ? 0.7 : 0.4,
       }}
       transition={{ 
         duration: 0.9, 
@@ -45,15 +46,24 @@ export const Convite: React.FC<ConviteProps> = ({
           onOpenDetail();
         }
       }}
-      style={imageUrl ? {
-        backgroundImage: `url(${imageUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      } : {}}
+      style={{
+        position: 'absolute',
+        top: '5%',
+        left: '5%',
+        width: '90%',
+        margin: 0,
+        zIndex: 2,
+        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+        ...(imageUrl ? {
+          backgroundImage: `url(${imageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        } : {})
+      }}
     >
       <div 
-        className="invitation-card-text-container"
+        className="modal-card-text-content"
         style={{
           backgroundColor: `rgba(0, 0, 0, ${Number(bgOverlayOpacity || 0) / 100})`
         }}

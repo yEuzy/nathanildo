@@ -51,7 +51,10 @@ export const AnimacaoPrincipal: React.FC = () => {
   // Actually, I'll just keep it simple as before but move it.
 
   const setIntroSequenceStageEnvelopeRising = () => setIntroStage('envelope-rising');
-  const setIntroSequenceStageFinished = () => setIntroStage('finished');
+  const setIntroSequenceStageFinished = () => {
+    setIntroStage('finished');
+    handleOpenEnvelope();
+  };
 
   const handleSaveName = (name: string) => {
     setGuestName(name);
@@ -64,13 +67,22 @@ export const AnimacaoPrincipal: React.FC = () => {
     setIsReady(true);
     let ignore = false;
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlName = urlParams.get("name") || urlParams.get("guest");
     const savedName = localStorage.getItem("guestName");
 
-    if (savedName) {
+    if (urlName) {
+      setGuestName(urlName);
+      localStorage.setItem("guestName", urlName);
+      triggerIntroSequence();
+    } else if (savedName) {
       setGuestName(savedName);
       triggerIntroSequence();
     } else {
-      setIsNameModalOpen(true);
+      const defaultName = "Convidado";
+      setGuestName(defaultName);
+      localStorage.setItem("guestName", defaultName);
+      triggerIntroSequence();
     }
 
     const loadData = async () => {
@@ -316,29 +328,24 @@ export const AnimacaoPrincipal: React.FC = () => {
           >
             <motion.div
               className="modal-content"
-              initial={{ scale: 0.4, opacity: 0, y: 50 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.4, opacity: 0, y: 50 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 300, 
-                damping: 25,
-                opacity: { duration: 0.2 }
-              }}
               onClick={(e) => e.stopPropagation()}
             >
               {localStorage.getItem("invitationOpened") !== "true" && (
-                <button
+                <motion.button
                   className="close-modal"
                   onClick={() => setIsDetailedView(false)}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
                 >
                   <X size={24} />
-                </button>
+                </motion.button>
               )}
 
               {/* Botão VIP dentro do convite ampliado */}
 
-              <div 
+              <motion.div 
+                layoutId="invitation-card"
                 className={`modal-card-display ${!settings.invitation_bg_url ? 'text-only' : ''}`}
                 style={settings.invitation_bg_url ? {
                   backgroundImage: `url(${settings.invitation_bg_url})`,
@@ -360,9 +367,14 @@ export const AnimacaoPrincipal: React.FC = () => {
                     {settings.invitation_body}
                   </p>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="action-buttons-modal">
+              <motion.div 
+                className="action-buttons-modal"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+              >
                 <button
                   className="action-btn"
                   onClick={() => {
@@ -398,7 +410,7 @@ export const AnimacaoPrincipal: React.FC = () => {
                     <span>Admin</span>
                   </button>
                 )}
-              </div>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
