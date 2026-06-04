@@ -322,6 +322,27 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({ settings, onSave, on
   const [bgOpacity, setBgOpacity] = useState(Number(settings.bg_overlay_opacity || 0));
   const [isSaving, setIsSaving] = useState(false);
 
+  // Mobile drawer controls
+  const [mobileMenu, setMobileMenu] = useState<'none' | 'layers' | 'general' | 'properties'>('none');
+
+  const handleMobileMenuToggle = (menu: 'layers' | 'general' | 'properties') => {
+    if (mobileMenu === menu) {
+      setMobileMenu('none');
+    } else {
+      setMobileMenu(menu);
+      if (menu === 'layers' || menu === 'general') {
+        setActiveTab(menu);
+      }
+    }
+  };
+
+  const handleTabChange = (tab: 'layers' | 'general') => {
+    setActiveTab(tab);
+    if (mobileMenu !== 'none') {
+      setMobileMenu(tab);
+    }
+  };
+
   // Snapping Guides state
   const [guideH, setGuideH] = useState<number | null>(null);
   const [guideV, setGuideV] = useState<number | null>(null);
@@ -353,6 +374,9 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({ settings, onSave, on
     if (e.target === e.currentTarget || e.target === canvasRef.current) {
       setSelectedId(null);
       setIsEditingInline(false);
+      if (window.innerWidth <= 768) {
+        setMobileMenu('none');
+      }
     }
   };
 
@@ -663,22 +687,24 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({ settings, onSave, on
       {/* Editor Main Work Area */}
       <div className="editor-main">
         {/* Left Sidebar: Tabs (Layers / Background) */}
-        <aside className="editor-sidebar">
+        <aside className={`editor-sidebar ${mobileMenu === 'layers' || mobileMenu === 'general' ? 'mobile-open' : ''}`}>
+          <div className="drawer-handle" />
           <div className="editor-sidebar-tabs">
             <div 
               className={`editor-sidebar-tab ${activeTab === 'layers' ? 'active' : ''}`}
-              onClick={() => setActiveTab('layers')}
+              onClick={() => handleTabChange('layers')}
             >
               <LayersIcon size={16} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
               Camadas
             </div>
             <div 
               className={`editor-sidebar-tab ${activeTab === 'general' ? 'active' : ''}`}
-              onClick={() => setActiveTab('general')}
+              onClick={() => handleTabChange('general')}
             >
               <Sparkles size={16} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
               Fundo & Links
             </div>
+            <button className="drawer-close-btn" onClick={() => setMobileMenu('none')}>&times;</button>
           </div>
 
           <div className="editor-sidebar-content">
@@ -952,18 +978,32 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({ settings, onSave, on
         </main>
 
         {/* Right Sidebar: Element Settings / Properties panel */}
-        <aside className="editor-properties-panel">
+        <aside className={`editor-properties-panel ${mobileMenu === 'properties' ? 'mobile-open' : ''}`}>
+          <div className="drawer-handle" />
+          <div className="drawer-mobile-header">
+            <span>Propriedades</span>
+            <button className="drawer-close-btn" onClick={() => setMobileMenu('none')}>&times;</button>
+          </div>
           {selectedElement ? (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #334155', paddingBottom: '10px' }}>
                 <h3 style={{ fontSize: '0.9rem', color: '#ffeb95' }}>Editar: {selectedElement.name}</h3>
-                <button 
-                  className="layer-btn" 
-                  onClick={() => updateSelectedProperty('locked', !selectedElement.locked)}
-                  title={selectedElement.locked ? 'Desbloquear elemento' : 'Bloquear elemento'}
-                >
-                  {selectedElement.locked ? <Lock size={16} /> : <Unlock size={16} />}
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button 
+                    className="layer-btn" 
+                    onClick={() => updateSelectedProperty('locked', !selectedElement.locked)}
+                    title={selectedElement.locked ? 'Desbloquear elemento' : 'Bloquear elemento'}
+                  >
+                    {selectedElement.locked ? <Lock size={16} /> : <Unlock size={16} />}
+                  </button>
+                  <button 
+                    className="drawer-close-btn" 
+                    onClick={() => setMobileMenu('none')}
+                    title="Fechar painel"
+                  >
+                    &times;
+                  </button>
+                </div>
               </div>
 
               {/* Text content input */}
@@ -1297,6 +1337,33 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({ settings, onSave, on
             </div>
           )}
         </aside>
+      </div>
+
+      {/* Mobile Dock Menu */}
+      <div className="editor-mobile-dock">
+        <button 
+          className={`dock-btn ${mobileMenu === 'layers' ? 'active' : ''}`}
+          onClick={() => handleMobileMenuToggle('layers')}
+        >
+          <LayersIcon size={20} />
+          <span>Camadas</span>
+        </button>
+        <button 
+          className={`dock-btn ${mobileMenu === 'general' ? 'active' : ''}`}
+          onClick={() => handleMobileMenuToggle('general')}
+        >
+          <Sparkles size={20} />
+          <span>Fundo</span>
+        </button>
+        <button 
+          className={`dock-btn ${mobileMenu === 'properties' ? 'active' : ''}`}
+          onClick={() => handleMobileMenuToggle('properties')}
+          disabled={!selectedElement}
+          title={!selectedElement ? 'Selecione um elemento para ajustar' : ''}
+        >
+          <Sliders size={20} />
+          <span>Ajustes</span>
+        </button>
       </div>
     </div>
   );

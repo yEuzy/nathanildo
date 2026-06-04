@@ -1021,3 +1021,193 @@ html, body {
   padding: 0;
   margin: 0;
 }
+
+/* Mobile Docking & Drawer Menus */
+.editor-mobile-dock {
+  display: none; /* hidden on desktop */
+}
+
+.drawer-handle {
+  display: none; /* hidden on desktop */
+}
+
+.drawer-mobile-header {
+  display: none; /* hidden on desktop */
+}
+
+.drawer-close-btn {
+  display: none; /* hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  /* Side panels behave as bottom sheets on mobile */
+  .editor-sidebar,
+  .editor-properties-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    height: 60vh !important;
+    max-height: 500px;
+    background-color: #1e293b;
+    border-top: 2px solid #334155;
+    border-left: none !important;
+    border-right: none !important;
+    z-index: 10005;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
+    border-radius: 20px 20px 0 0;
+    display: flex !important;
+    flex-direction: column;
+    padding: 0 20px 20px 20px !important;
+    overflow: hidden;
+  }
+
+  .editor-sidebar-content,
+  .editor-properties-panel {
+    overflow-y: auto;
+  }
+
+  /* Show the active drawer */
+  .editor-sidebar.mobile-open,
+  .editor-properties-panel.mobile-open {
+    transform: translateY(0) !important;
+  }
+
+  /* Show handle on mobile drawers */
+  .drawer-handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    background-color: #475569;
+    border-radius: 2px;
+    margin: 10px auto 15px auto;
+    flex-shrink: 0;
+  }
+
+  /* Show mobile header inside drawers */
+  .drawer-mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 10px 0;
+    border-bottom: 1px solid #334155;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+  }
+
+  .drawer-mobile-header span {
+    font-size: 0.95rem;
+    color: #ffeb95;
+    font-weight: 700;
+  }
+
+  /* Close button style inside drawers */
+  .drawer-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background-color: #334155;
+    border: none;
+    border-radius: 50%;
+    color: #f8fafc;
+    font-size: 1.1rem;
+    cursor: pointer;
+    font-weight: bold;
+    line-height: 1;
+    padding-bottom: 2px;
+    transition: background-color 0.2s;
+  }
+
+  .drawer-close-btn:hover {
+    background-color: #475569;
+  }
+
+  /* Ajustar o editor-sidebar-tabs para não quebrar com o botão fechar */
+  .editor-sidebar-tabs {
+    position: relative;
+    padding-right: 40px; /* espaço para o botão fechar */
+    width: 100%;
+  }
+
+  .editor-sidebar-tabs .drawer-close-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Main workspace sizing for mobile */
+  .editor-main {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .canvas-workspace {
+    width: 100%;
+    height: 100%;
+    padding: 20px 10px 90px 10px !important; /* workspace height padding for dock */
+  }
+
+  /* Bottom Docking Menu style */
+  .editor-mobile-dock {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background-color: #1e293b;
+    border-top: 1px solid #334155;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+    z-index: 10004;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .dock-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    flex: 1;
+    max-width: 90px;
+  }
+
+  .dock-btn:hover {
+    color: #f8fafc;
+  }
+
+  .dock-btn.active {
+    color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+
+  .dock-btn:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed;
+  }
+
+  /* Hide header's device selectors on mobile to avoid layout breaking */
+  .editor-header-actions .prop-btn-group {
+    display: none !important;
+  }
+
+  .editor-header-title {
+    font-size: 0.95rem;
+  }
+}
