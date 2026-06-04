@@ -352,10 +352,12 @@ export const AdminGifts: React.FC = () => {
 
   const saveAllSettings = async () => {
     setIsSavingSettings(true);
-    const updates = Object.entries(settings).map(([key, value]) => ({
-      key,
-      value
-    }));
+    const updates = Object.entries(settings)
+      .filter(([key]) => key !== 'confirmed_guests')
+      .map(([key, value]) => ({
+        key,
+        value
+      }));
 
     const { error } = await supabase
       .from('event_settings')
