@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Gift } from '../types';
@@ -48,6 +48,17 @@ export const AdminGifts: React.FC = () => {
     guest?: any;
     name?: string;
   } | null>(null);
+
+  // Refs to avoid camera restart on state changes
+  const scanResultRef = useRef(scanResult);
+  useEffect(() => {
+    scanResultRef.current = scanResult;
+  }, [scanResult]);
+
+  const confirmedGuestsRef = useRef(confirmedGuests);
+  useEffect(() => {
+    confirmedGuestsRef.current = confirmedGuests;
+  }, [confirmedGuests]);
 
   // Sync confirmedGuests with settings
   useEffect(() => {
@@ -264,7 +275,7 @@ export const AdminGifts: React.FC = () => {
 
   // Scanner Effect
   useEffect(() => {
-    if (activeTab !== 'scanner' || scanResult) return;
+    if (activeTab !== 'scanner') return;
 
     const timer = setTimeout(() => {
       const container = document.getElementById("reader");
@@ -287,6 +298,8 @@ export const AdminGifts: React.FC = () => {
       );
 
       const onScanSuccess = async (decodedText: string) => {
+        if (scanResultRef.current) return;
+
         let scannedName = decodedText;
         if (decodedText.startsWith('invite:')) {
           scannedName = decodedText.substring(7);
@@ -294,7 +307,7 @@ export const AdminGifts: React.FC = () => {
         scannedName = scannedName.trim();
 
         // Find guest (case-insensitive)
-        const matchedGuest = confirmedGuests.find(
+        const matchedGuest = confirmedGuestsRef.current.find(
           g => g.name.toLowerCase() === scannedName.toLowerCase()
         );
 
@@ -306,7 +319,7 @@ export const AdminGifts: React.FC = () => {
               guest: matchedGuest
             });
           } else {
-            const updatedList = confirmedGuests.map(g => {
+            const updatedList = confirmedGuestsRef.current.map(g => {
               if (g.id === matchedGuest.id) {
                 return {
                   ...g,
@@ -344,7 +357,7 @@ export const AdminGifts: React.FC = () => {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [activeTab, scanResult, confirmedGuests]);
+  }, [activeTab]);
 
   const handleUpdateSetting = async (key: string, value: string) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -1011,113 +1024,128 @@ export const AdminGifts: React.FC = () => {
           padding: '30px',
           borderRadius: '24px',
           boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-          marginBottom: '40px'
+          marginBottom: '40px',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
-          <h2 style={{ color: '#1e293b', marginBottom: '20px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            📷 Check-in via QR Code
-          </h2>
-
-          {scanResult ? (
+          {scanResult && (
             <div style={{
-              background: scanResult.status === 'success' ? '#f0fdf4' : scanResult.status === 'warning' ? '#fffbeb' : '#fef2f2',
-              border: `2px solid ${scanResult.status === 'success' ? '#bbf7d0' : scanResult.status === 'warning' ? '#fef3c7' : '#fecaca'}`,
-              borderRadius: '16px',
-              padding: '25px',
+              position: 'absolute',
+              inset: 0,
+              background: 'white',
+              zIndex: 10,
+              padding: '30px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
               textAlign: 'center',
-              marginBottom: '20px',
-              color: scanResult.status === 'success' ? '#166534' : scanResult.status === 'warning' ? '#92400e' : '#991b1b'
+              boxSizing: 'border-box'
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '15px' }}>
-                {scanResult.status === 'success' ? '✅' : scanResult.status === 'warning' ? '⚠️' : '❌'}
-              </div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, margin: '0 0 10px 0' }}>
-                {scanResult.status === 'success' ? 'Check-in Confirmado!' : scanResult.status === 'warning' ? 'Atenção!' : 'Convidado Não Encontrado'}
-              </h3>
-              <p style={{ fontSize: '1rem', margin: '0 0 20px 0', opacity: 0.9 }}>
-                {scanResult.message}
-              </p>
-
-              {scanResult.guest && (
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.6)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  maxWidth: '300px',
-                  margin: '0 auto 20px auto',
-                  textAlign: 'left',
-                  border: '1px solid rgba(0,0,0,0.05)'
-                }}>
-                  <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#1e293b' }}>
-                    {scanResult.guest.name}
-                  </div>
-                  {scanResult.guest.companions && scanResult.guest.companions.length > 0 && (
-                    <div style={{ marginTop: '8px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                        Acompanhantes ({scanResult.guest.companions.length}):
-                      </span>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {scanResult.guest.companions.map((c: string, idx: number) => (
-                          <span key={idx} style={{ fontSize: '0.75rem', background: 'rgba(0,0,0,0.05)', color: '#334155', padding: '2px 8px', borderRadius: '12px' }}>
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {scanResult.guest.checkedInAt && (
-                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>
-                      Entrada: {new Date(scanResult.guest.checkedInAt).toLocaleString('pt-BR')}
-                    </div>
-                  )}
+              <div style={{
+                background: scanResult.status === 'success' ? '#f0fdf4' : scanResult.status === 'warning' ? '#fffbeb' : '#fef2f2',
+                border: `2px solid ${scanResult.status === 'success' ? '#bbf7d0' : scanResult.status === 'warning' ? '#fef3c7' : '#fecaca'}`,
+                borderRadius: '16px',
+                padding: '25px',
+                width: '100%',
+                maxHeight: '100%',
+                overflowY: 'auto',
+                boxSizing: 'border-box',
+                color: scanResult.status === 'success' ? '#166534' : scanResult.status === 'warning' ? '#92400e' : '#991b1b'
+              }}>
+                <div style={{ fontSize: '3rem', marginBottom: '15px' }}>
+                  {scanResult.status === 'success' ? '✅' : scanResult.status === 'warning' ? '⚠️' : '❌'}
                 </div>
-              )}
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 700, margin: '0 0 10px 0' }}>
+                  {scanResult.status === 'success' ? 'Check-in Confirmado!' : scanResult.status === 'warning' ? 'Atenção!' : 'Convidado Não Encontrado'}
+                </h3>
+                <p style={{ fontSize: '1rem', margin: '0 0 20px 0', opacity: 0.9 }}>
+                  {scanResult.message}
+                </p>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                {scanResult.status === 'error' && scanResult.name && (
+                {scanResult.guest && (
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.6)',
+                    borderRadius: '12px',
+                    padding: '15px',
+                    maxWidth: '300px',
+                    margin: '0 auto 20px auto',
+                    textAlign: 'left',
+                    border: '1px solid rgba(0,0,0,0.05)'
+                  }}>
+                    <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#1e293b' }}>
+                      {scanResult.guest.name}
+                    </div>
+                    {scanResult.guest.companions && scanResult.guest.companions.length > 0 && (
+                      <div style={{ marginTop: '8px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>
+                          Acompanhantes ({scanResult.guest.companions.length}):
+                        </span>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {scanResult.guest.companions.map((c: string, idx: number) => (
+                            <span key={idx} style={{ fontSize: '0.75rem', background: 'rgba(0,0,0,0.05)', color: '#334155', padding: '2px 8px', borderRadius: '12px' }}>
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {scanResult.guest.checkedInAt && (
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>
+                        Entrada: {new Date(scanResult.guest.checkedInAt).toLocaleString('pt-BR')}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  {scanResult.status === 'error' && scanResult.name && (
+                    <button
+                      onClick={() => handleQuickAddAndCheckIn(scanResult.name!)}
+                      style={{
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)'
+                      }}
+                    >
+                      Adicionar e Fazer Check-in
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleQuickAddAndCheckIn(scanResult.name!)}
+                    onClick={() => setScanResult(null)}
                     style={{
-                      background: '#10b981',
+                      background: scanResult.status === 'success' ? '#166534' : scanResult.status === 'warning' ? '#92400e' : '#991b1b',
                       color: 'white',
                       border: 'none',
                       padding: '10px 20px',
                       borderRadius: '10px',
                       cursor: 'pointer',
                       fontWeight: 700,
-                      fontSize: '0.9rem',
-                      boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)'
+                      fontSize: '0.9rem'
                     }}
                   >
-                    Adicionar e Fazer Check-in
+                    Escanear Próximo
                   </button>
-                )}
-                <button
-                  onClick={() => setScanResult(null)}
-                  style={{
-                    background: scanResult.status === 'success' ? '#166534' : scanResult.status === 'warning' ? '#92400e' : '#991b1b',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  Escanear Próximo
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <p style={{ color: '#64748b', fontSize: '0.95rem', marginBottom: '20px', textAlign: 'center' }}>
-                Aponte a câmera do dispositivo para o QR Code do ingresso do convidado.
-              </p>
-              <div style={{ position: 'relative', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
-                <div id="reader" style={{ width: '100%' }}></div>
+                </div>
               </div>
             </div>
           )}
+
+          <h2 style={{ color: '#1e293b', marginBottom: '20px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            📷 Check-in via QR Code
+          </h2>
+          <p style={{ color: '#64748b', fontSize: '0.95rem', marginBottom: '20px', textAlign: 'center' }}>
+            Aponte a câmera do dispositivo para o QR Code do ingresso do convidado.
+          </p>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+            <div id="reader" style={{ width: '100%' }}></div>
+          </div>
         </div>
       )}
 
