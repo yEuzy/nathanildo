@@ -79,10 +79,7 @@ export const AnimacaoPrincipal: React.FC = () => {
       setGuestName(savedName);
       triggerIntroSequence();
     } else {
-      const defaultName = "Convidado";
-      setGuestName(defaultName);
-      localStorage.setItem("guestName", defaultName);
-      triggerIntroSequence();
+      setIsNameModalOpen(true);
     }
 
     const loadData = async () => {
