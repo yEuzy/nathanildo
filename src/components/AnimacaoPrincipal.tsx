@@ -15,6 +15,9 @@ export const AnimacaoPrincipal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDetailedView, setIsDetailedView] = useState(false);
   const [isGiftsModalOpen, setIsGiftsModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [companions, setCompanions] = useState<string[]>([]);
+  const [newCompanionName, setNewCompanionName] = useState("");
   const [guestName, setGuestName] = useState("");
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [gifts, setGifts] = useState<Gift[]>([]);
@@ -106,6 +109,36 @@ export const AnimacaoPrincipal: React.FC = () => {
     localStorage.setItem("guestName", name);
     setIsNameModalOpen(false);
     triggerIntroSequence();
+  };
+
+  const handleOpenConfirmModal = () => {
+    setCompanions([]);
+    setNewCompanionName("");
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleAddCompanion = () => {
+    if (newCompanionName.trim()) {
+      setCompanions(prev => [...prev, newCompanionName.trim()]);
+      setNewCompanionName("");
+    }
+  };
+
+  const handleRemoveCompanion = (index: number) => {
+    setCompanions(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSendConfirmWhatsApp = () => {
+    let messageText = `Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan!`;
+    if (companions.length > 0) {
+      messageText += ` Acompanhantes: ${companions.join(', ')}`;
+    }
+    const message = encodeURIComponent(messageText);
+    const finalLink = settings.rsvp_link.includes('?')
+      ? `${settings.rsvp_link}&text=${message}`
+      : `${settings.rsvp_link}?text=${message}`;
+    window.open(finalLink, '_blank');
+    setIsConfirmModalOpen(false);
   };
 
   useEffect(() => {
@@ -473,11 +506,7 @@ export const AnimacaoPrincipal: React.FC = () => {
                               if (elementId.startsWith('botao')) {
                                 e.stopPropagation();
                                 if (elementId === 'botao_confirmar') {
-                                  const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan! Junto a mim:  `);
-                                  const finalLink = settings.rsvp_link.includes('?')
-                                    ? `${settings.rsvp_link}&text=${message}`
-                                    : `${settings.rsvp_link}?text=${message}`;
-                                  window.open(finalLink, '_blank');
+                                  handleOpenConfirmModal();
                                 } else if (elementId === 'botao_local') {
                                   window.open(settings.location_url, '_blank');
                                 } else if (elementId === 'botao_dicas') {
@@ -525,13 +554,7 @@ export const AnimacaoPrincipal: React.FC = () => {
                 {!isButtonVisibleOnCard('botao_confirmar') && (
                   <button
                     className="action-btn"
-                    onClick={() => {
-                      const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan! Junto a mim: `);
-                      const finalLink = settings.rsvp_link.includes('?')
-                        ? `${settings.rsvp_link}&text=${message}`
-                        : `${settings.rsvp_link}?text=${message}`;
-                      window.open(finalLink, '_blank');
-                    }}
+                    onClick={handleOpenConfirmModal}
                   >
                     <img src="/001.png" alt="RSVP" className="btn-icon" />
                     <span>Confirmar</span>
@@ -719,6 +742,163 @@ export const AnimacaoPrincipal: React.FC = () => {
                   Entrar
                 </button>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Modal de Acompanhantes / Confirmar Presença */}
+        {isConfirmModalOpen && (
+          <motion.div
+            key="confirm-modal"
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ zIndex: 2500 }}
+            onClick={() => setIsConfirmModalOpen(false)}
+          >
+            <motion.div
+              className="modal-content name-modal confirm-presenca-modal"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="close-modal"
+                onClick={() => setIsConfirmModalOpen(false)}
+              >
+                <X size={24} />
+              </button>
+
+              <h2
+                style={{
+                  color: "#1e40af",
+                  marginBottom: "10px",
+                  textAlign: "center",
+                  fontFamily: "'Dancing Script', cursive",
+                  fontSize: "2.2rem"
+                }}
+              >
+                Confirmar Presença
+              </h2>
+              <p style={{ textAlign: "center", marginBottom: "20px", color: "#64748b", fontSize: "0.95rem" }}>
+                Você está confirmando para <strong>{guestName}</strong>. Deseja adicionar algum acompanhante?
+              </p>
+
+              {/* Input para adicionar acompanhantes */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', width: '100%' }}>
+                <input
+                  type="text"
+                  placeholder="Nome do acompanhante"
+                  value={newCompanionName}
+                  onChange={(e) => setNewCompanionName(e.target.value)}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    border: "2px solid #e2e8f0",
+                    fontSize: "0.9rem",
+                    outline: "none",
+                    boxSizing: 'border-box'
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCompanion();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCompanion}
+                  style={{
+                    padding: "10px 16px",
+                    background: "#3b82f6",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontSize: "0.9rem",
+                    flexShrink: 0
+                  }}
+                >
+                  Adicionar
+                </button>
+              </div>
+
+              {/* Lista de acompanhantes adicionados */}
+              {companions.length > 0 && (
+                <div style={{ width: '100%', maxHeight: '140px', overflowY: 'auto', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>Acompanhantes:</span>
+                  {companions.map((comp, idx) => (
+                    <div 
+                      key={idx} 
+                      style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)', 
+                        border: '1px solid rgba(59, 130, 246, 0.1)',
+                        padding: '8px 12px', 
+                        borderRadius: '10px', 
+                        color: '#334155', 
+                        fontSize: '0.85rem' 
+                      }}
+                    >
+                      <span style={{ fontWeight: '500' }}>{comp}</span>
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveCompanion(idx)} 
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Botões de Ação */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={handleSendConfirmWhatsApp}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    boxShadow: "0 4px 10px rgba(16, 185, 129, 0.2)",
+                    fontSize: "0.95rem"
+                  }}
+                >
+                  Confirmar no WhatsApp
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmModalOpen(false)}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    background: "transparent",
+                    color: "#64748b",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: "0.9rem"
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

@@ -1211,3 +1211,10 @@ html, body {
     font-size: 0.95rem;
   }
 }
+
+/* Confirm Presence Companions Modal Styling */
+.confirm-presenca-modal {
+  text-align: left !important;
+  max-width: 400px !important;
+  padding: 30px 24px !important;
+}
