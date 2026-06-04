@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Gift as GiftIcon, Heart } from "lucide-react";
+import { X, Gift as GiftIcon, Heart, QrCode } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import { Envelope } from "./Envelope";
@@ -16,6 +16,7 @@ export const AnimacaoPrincipal: React.FC = () => {
   const [isDetailedView, setIsDetailedView] = useState(false);
   const [isGiftsModalOpen, setIsGiftsModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [companions, setCompanions] = useState<string[]>([]);
   const [newCompanionName, setNewCompanionName] = useState("");
   const [guestName, setGuestName] = useState("");
@@ -128,11 +129,49 @@ export const AnimacaoPrincipal: React.FC = () => {
     setCompanions(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSendConfirmWhatsApp = () => {
+  const handleSendConfirmWhatsApp = async () => {
     let messageText = `Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan!`;
     if (companions.length > 0) {
       messageText += ` Acompanhantes: ${companions.join(', ')}`;
     }
+
+    try {
+      const { data: currentEntry } = await supabase
+        .from('event_settings')
+        .select('*')
+        .eq('key', 'confirmed_guests')
+        .maybeSingle();
+
+      let currentList: any[] = [];
+      if (currentEntry && currentEntry.value) {
+        try {
+          currentList = JSON.parse(currentEntry.value);
+          if (!Array.isArray(currentList)) currentList = [];
+        } catch (e) {
+          console.error('Erro ao fazer parse dos convidados confirmados:', e);
+        }
+      }
+
+      const newConfirmation = {
+        id: `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: guestName,
+        companions: companions,
+        confirmedAt: new Date().toISOString()
+      };
+
+      currentList.push(newConfirmation);
+
+      await supabase
+        .from('event_settings')
+        .upsert({
+          key: 'confirmed_guests',
+          value: JSON.stringify(currentList)
+        }, { onConflict: 'key' });
+
+    } catch (err) {
+      console.error('Erro ao registrar confirmação no banco:', err);
+    }
+
     const message = encodeURIComponent(messageText);
     const finalLink = settings.rsvp_link.includes('?')
       ? `${settings.rsvp_link}&text=${message}`
@@ -575,6 +614,15 @@ export const AnimacaoPrincipal: React.FC = () => {
                     <span>Dicas</span>
                   </button>
                 )}
+                {guestName && (
+                  <button
+                    className="action-btn ticket-btn"
+                    onClick={() => setIsTicketModalOpen(true)}
+                  >
+                    <QrCode className="btn-icon" />
+                    <span>Ingresso</span>
+                  </button>
+                )}
                 {vipNames.includes(guestName) && (
                   <button
                     className="action-btn admin-btn-special"
@@ -899,6 +947,79 @@ export const AnimacaoPrincipal: React.FC = () => {
                   Cancelar
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Modal de Ingresso QR Code */}
+        {isTicketModalOpen && (
+          <motion.div
+            key="ticket-modal"
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ zIndex: 2500 }}
+            onClick={() => setIsTicketModalOpen(false)}
+          >
+            <motion.div
+              className="modal-content name-modal ticket-modal"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="close-modal"
+                onClick={() => setIsTicketModalOpen(false)}
+                style={{
+                  position: "absolute",
+                  top: "20px",
+                  right: "20px",
+                  color: "#64748b",
+                  background: "rgba(0,0,0,0.05)",
+                  border: "none",
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <X size={20} />
+              </button>
+
+              <h2
+                style={{
+                  color: "#7e22ce",
+                  marginBottom: "10px",
+                  textAlign: "center",
+                  fontFamily: "'Dancing Script', cursive",
+                  fontSize: "2.2rem"
+                }}
+              >
+                Seu Ingresso
+              </h2>
+              <p style={{ textAlign: "center", marginBottom: "20px", color: "#64748b", fontSize: "0.95rem" }}>
+                Apresente o QR Code abaixo na entrada do evento.
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', marginBottom: '20px', width: 'fit-content', margin: '0 auto' }}>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`invite:${guestName}`)}`}
+                  alt="QR Code Ingresso"
+                  style={{ width: '180px', height: '180px', display: 'block' }}
+                />
+              </div>
+
+              <div style={{ textAlign: 'center', color: '#1e1b4b', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '4px' }}>
+                {guestName}
+              </div>
+              <p style={{ textAlign: "center", color: "#94a3b8", fontSize: "0.8rem", margin: 0 }}>
+                Código único de convidado
+              </p>
             </motion.div>
           </motion.div>
         )}
