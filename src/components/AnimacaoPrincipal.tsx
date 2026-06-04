@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Gift as GiftIcon, Heart } from "lucide-react";
@@ -27,10 +27,55 @@ export const AnimacaoPrincipal: React.FC = () => {
     invitation_title_color: '',
     invitation_body_color: '',
     show_gifts_btn: 'true',
-    bg_overlay_opacity: '0'
+    bg_overlay_opacity: '0',
+    invitation_alignment: 'center',
+    editor_layout: ''
   });
 
   const [introStage, setIntroStage] = useState<'idle' | 'book-closed' | 'book-opening' | 'envelope-rising' | 'finished'>('idle');
+
+  const modalContainerRef = useRef<HTMLDivElement>(null);
+  const [modalContainerWidth, setModalContainerWidth] = useState(400);
+
+  useEffect(() => {
+    if (!modalContainerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setModalContainerWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(modalContainerRef.current);
+    return () => observer.disconnect();
+  }, [isDetailedView]);
+
+  const modalScale = modalContainerWidth / 400;
+
+  let parsedLayout: any = null;
+  if (settings.editor_layout) {
+    try {
+      parsedLayout = JSON.parse(settings.editor_layout);
+    } catch (e) {
+      console.error('Erro ao fazer parse do layout no Modal:', e);
+    }
+  }
+
+  const isButtonVisibleOnCard = (buttonId: string) => {
+    if (!parsedLayout) return false;
+    const btn = parsedLayout.elements[buttonId];
+    return btn && btn.visible;
+  };
+
+  const getAlignmentStyle = (align: string): React.CSSProperties => {
+    if (align === 'space-between') {
+      return {
+        textAlign: 'justify',
+        textAlignLast: 'justify'
+      };
+    }
+    return {
+      textAlign: align as any
+    };
+  };
 
   const vipNames = ["Kallewfel", "Mrita", "AlineBelo"]; // Substitua pelos nomes desejados
 
@@ -301,6 +346,9 @@ export const AnimacaoPrincipal: React.FC = () => {
               titleColor={settings.invitation_title_color}
               bodyColor={settings.invitation_body_color}
               bgOverlayOpacity={settings.bg_overlay_opacity}
+              editorLayout={settings.editor_layout}
+              guestName={guestName}
+              invitationAlignment={settings.invitation_alignment}
             />
           </Envelope>
 
@@ -351,19 +399,121 @@ export const AnimacaoPrincipal: React.FC = () => {
                   backgroundRepeat: 'no-repeat'
                 } : {}}
               >
-                <div 
-                  className="modal-card-text-content"
-                  style={{
-                    backgroundColor: `rgba(0, 0, 0, ${Number(settings.bg_overlay_opacity || 0) / 100})`
-                  }}
-                >
-                  <h1 className={(!guestName && settings.invitation_title === 'carregando...') ? 'loading' : ''} style={settings.invitation_title_color ? { color: settings.invitation_title_color } : {}}>
-                    {guestName || settings.invitation_title}
-                  </h1>
-                  <p className={settings.invitation_body === '...' ? 'loading' : ''} style={settings.invitation_body_color ? { color: settings.invitation_body_color } : {}}>
-                    {settings.invitation_body}
-                  </p>
-                </div>
+                {parsedLayout ? (
+                  <div 
+                    ref={modalContainerRef}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '400px',
+                        height: '500px',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        transform: `scale(${modalScale})`,
+                        transformOrigin: 'top left'
+                      }}
+                    >
+                      {parsedLayout.layerOrder.map((elementId: string) => {
+                        const element = parsedLayout!.elements[elementId];
+                        if (!element || !element.visible) return null;
+
+                        let text = element.text;
+                        if (elementId === 'titulo' && guestName) {
+                          text = guestName;
+                        }
+
+                        const alignStyle = getAlignmentStyle(element.align);
+
+                        const elementStyle: React.CSSProperties = {
+                          position: 'absolute',
+                          left: `${element.x}px`,
+                          top: `${element.y}px`,
+                          width: `${element.width}px`,
+                          height: `${element.height}px`,
+                          fontFamily: `${element.fontFamily}, sans-serif`,
+                          fontSize: `${element.fontSize}px`,
+                          fontWeight: element.fontWeight,
+                          fontStyle: element.fontStyle,
+                          textDecoration: element.textDecoration,
+                          color: element.color,
+                          backgroundColor: element.backgroundColor || 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: element.align === 'center' ? 'center' : 
+                                           element.align === 'right' ? 'flex-end' : 'flex-start',
+                          ...alignStyle,
+                          lineHeight: element.lineHeight,
+                          letterSpacing: `${element.letterSpacing}px`,
+                          opacity: element.opacity / 100,
+                          transform: `rotate(${element.rotation}deg)`,
+                          textShadow: element.shadow ? '2px 2px 4px rgba(0, 0, 0, 0.4)' : 'none',
+                          WebkitTextStroke: element.stroke ? `${element.strokeWidth}px ${element.strokeColor}` : 'none',
+                          borderRadius: elementId.startsWith('botao') ? '20px' : '0',
+                          boxShadow: elementId.startsWith('botao') && element.shadow ? '0 4px 10px rgba(0,0,0,0.3)' : 'none',
+                          padding: elementId.startsWith('botao') ? '8px 16px' : '4px',
+                          boxSizing: 'border-box'
+                        };
+
+                        return (
+                          <div 
+                            key={elementId} 
+                            style={{
+                              ...elementStyle,
+                              pointerEvents: elementId.startsWith('botao') ? 'auto' : 'none',
+                              cursor: elementId.startsWith('botao') ? 'pointer' : 'default'
+                            }}
+                            onClick={(e) => {
+                              if (elementId.startsWith('botao')) {
+                                e.stopPropagation();
+                                if (elementId === 'botao_confirmar') {
+                                  const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan!`);
+                                  const finalLink = settings.rsvp_link.includes('?')
+                                    ? `${settings.rsvp_link}&text=${message}`
+                                    : `${settings.rsvp_link}?text=${message}`;
+                                  window.open(finalLink, '_blank');
+                                } else if (elementId === 'botao_local') {
+                                  window.open(settings.location_url, '_blank');
+                                } else if (elementId === 'botao_dicas') {
+                                  showGifts();
+                                }
+                              }
+                            }}
+                          >
+                            <span>{text}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    className="modal-card-text-content"
+                    style={{
+                      backgroundColor: `rgba(0, 0, 0, ${Number(settings.bg_overlay_opacity || 0) / 100})`,
+                      textAlign: (settings.invitation_alignment || 'center') as any
+                    }}
+                  >
+                    <h1 className={(!guestName && settings.invitation_title === 'carregando...') ? 'loading' : ''} style={{
+                      color: settings.invitation_title_color,
+                      textAlign: (settings.invitation_alignment || 'center') as any
+                    }}>
+                      {guestName || settings.invitation_title}
+                    </h1>
+                    <p className={settings.invitation_body === '...' ? 'loading' : ''} style={{
+                      color: settings.invitation_body_color,
+                      textAlign: (settings.invitation_alignment || 'center') as any
+                    }}>
+                      {settings.invitation_body}
+                    </p>
+                  </div>
+                )}
               </motion.div>
 
               <motion.div 
@@ -372,27 +522,31 @@ export const AnimacaoPrincipal: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6, duration: 0.5 }}
               >
-                <button
-                  className="action-btn"
-                  onClick={() => {
-                    const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan!`);
-                    const finalLink = settings.rsvp_link.includes('?')
-                      ? `${settings.rsvp_link}&text=${message}`
-                      : `${settings.rsvp_link}?text=${message}`;
-                    window.open(finalLink, '_blank');
-                  }}
-                >
-                  <img src="/001.png" alt="RSVP" className="btn-icon" />
-                  <span>Confirmar</span>
-                </button>
-                <button
-                  className="action-btn"
-                  onClick={() => window.open(settings.location_url, '_blank')}
-                >
-                  <img src="/025.png" alt="Local" className="btn-icon" />
-                  <span>Local</span>
-                </button>
-                {settings.show_gifts_btn !== 'false' && (
+                {!isButtonVisibleOnCard('botao_confirmar') && (
+                  <button
+                    className="action-btn"
+                    onClick={() => {
+                      const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan!`);
+                      const finalLink = settings.rsvp_link.includes('?')
+                        ? `${settings.rsvp_link}&text=${message}`
+                        : `${settings.rsvp_link}?text=${message}`;
+                      window.open(finalLink, '_blank');
+                    }}
+                  >
+                    <img src="/001.png" alt="RSVP" className="btn-icon" />
+                    <span>Confirmar</span>
+                  </button>
+                )}
+                {!isButtonVisibleOnCard('botao_local') && (
+                  <button
+                    className="action-btn"
+                    onClick={() => window.open(settings.location_url, '_blank')}
+                  >
+                    <img src="/025.png" alt="Local" className="btn-icon" />
+                    <span>Local</span>
+                  </button>
+                )}
+                {settings.show_gifts_btn !== 'false' && !isButtonVisibleOnCard('botao_dicas') && (
                   <button className="action-btn" onClick={showGifts}>
                     <img src="/028.png" alt="Dicas" className="btn-icon" />
                     <span>Dicas</span>

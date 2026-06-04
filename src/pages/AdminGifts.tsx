@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Gift } from '../types';
 import { Trash2, Plus, Loader2, ArrowLeft } from 'lucide-react';
+import { VisualEditor } from '../components/VisualEditor';
 
 export const AdminGifts: React.FC = () => {
   const navigate = useNavigate();
   const [gifts, setGifts] = useState<Gift[]>([]);
-
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
   const [newLink, setNewLink] = useState('');
@@ -23,7 +24,9 @@ export const AdminGifts: React.FC = () => {
     invitation_title_color: '',
     invitation_body_color: '',
     show_gifts_btn: 'true',
-    bg_overlay_opacity: '0'
+    bg_overlay_opacity: '0',
+    invitation_alignment: 'center',
+    editor_layout: ''
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -187,9 +190,27 @@ export const AdminGifts: React.FC = () => {
         boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
         marginBottom: '40px'
       }}>
-        <h2 style={{ color: '#1e293b', marginBottom: '20px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          📝 Conteúdo do Convite
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: '#1e293b', margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            📝 Conteúdo do Convite
+          </h2>
+          <button
+            onClick={() => setIsEditorOpen(true)}
+            style={{
+              padding: '8px 16px',
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)'
+            }}
+          >
+            🎨 Editar Sobre o Convite (WYSIWYG)
+          </button>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Título do Convite</label>
@@ -253,6 +274,20 @@ export const AdminGifts: React.FC = () => {
               >
                 <option value="true">Ativado (Mostrar)</option>
                 <option value="false">Desativado (Ocultar)</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>Alinhamento do Conteúdo</label>
+              <select
+                value={settings.invitation_alignment || 'center'}
+                onChange={(e) => handleUpdateSetting('invitation_alignment', e.target.value)}
+                style={{ width: '100%', padding: '11px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', boxSizing: 'border-box', background: 'white', height: '42px', fontSize: '0.85rem', fontWeight: 600 }}
+              >
+                <option value="left">Esquerda</option>
+                <option value="center">Centro</option>
+                <option value="right">Direita</option>
+                <option value="justify">Justificado</option>
+                <option value="space-between">Distribuído</option>
               </select>
             </div>
             <div>
@@ -510,6 +545,23 @@ export const AdminGifts: React.FC = () => {
           <ArrowLeft size={18} /> Voltar para o Convite
         </button>
       </div>
+
+      {isEditorOpen && (
+        <VisualEditor
+          settings={settings}
+          onSave={async () => {
+            const { data: settingsData } = await supabase.from('event_settings').select('*');
+            if (settingsData) {
+              const s: any = {};
+              settingsData.forEach(item => {
+                s[item.key] = item.value;
+              });
+              setSettings(prev => ({ ...prev, ...s }));
+            }
+          }}
+          onClose={() => setIsEditorOpen(false)}
+        />
+      )}
     </div>
   );
 };
