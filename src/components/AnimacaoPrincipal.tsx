@@ -266,14 +266,14 @@ export const AnimacaoPrincipal: React.FC = () => {
             <motion.div
               className="book"
               initial={{ x: 0, opacity: 0, scale: 0.8 }}
-              animate={{ 
-                x: introStage === 'envelope-rising' ? -300 : 0, 
+              animate={{
+                x: introStage === 'envelope-rising' ? -300 : 0,
                 opacity: introStage === 'envelope-rising' ? 0 : 1,
                 scale: introStage === 'envelope-rising' ? 0.8 : 1
               }}
               transition={{ duration: 1.5, ease: "easeInOut" }}
             >
-              <motion.div 
+              <motion.div
                 className="book-cover"
                 initial={{ rotateY: 0 }}
                 animate={{ rotateY: introStage === 'book-closed' ? 0 : -160 }}
@@ -284,12 +284,12 @@ export const AnimacaoPrincipal: React.FC = () => {
 
               {/* Camadas de Páginas Extras - Alternando Imagens */}
               {[1, 2, 3, 4, 5, 6].map((i) => {
-                const imgSrc = i === 1 ? '/outras-paginas.png' : 
-                               i === 2 ? '/outras-paginas2.png' : 
-                               i === 3 ? '/outras-paginas3.png' :
-                               i === 4 ? '/outras-paginas.png' :
-                               i === 5 ? '/outras-paginas2.png' : '/outras-paginas3.png';
-                
+                const imgSrc = i === 1 ? '/outras-paginas.png' :
+                  i === 2 ? '/outras-paginas2.png' :
+                    i === 3 ? '/outras-paginas3.png' :
+                      i === 4 ? '/outras-paginas.png' :
+                        i === 5 ? '/outras-paginas2.png' : '/outras-paginas3.png';
+
                 return (
                   <motion.div
                     key={i}
@@ -330,9 +330,9 @@ export const AnimacaoPrincipal: React.FC = () => {
             opacity: 1
           }}
           transition={{ duration: 1.5, ease: [0.34, 1.56, 0.64, 1], delay: 0.2 }}
-          style={{ 
-            zIndex: 100, 
-            position: 'relative' 
+          style={{
+            zIndex: 100,
+            position: 'relative'
           }}
         >
           <Envelope isOpen={isOpen} onClick={handleOpenEnvelope} guestName={guestName}>
@@ -389,7 +389,7 @@ export const AnimacaoPrincipal: React.FC = () => {
 
               {/* Botão VIP dentro do convite ampliado */}
 
-              <motion.div 
+              <motion.div
                 layoutId="invitation-card"
                 className={`modal-card-display ${!settings.invitation_bg_url ? 'text-only' : ''}`}
                 style={settings.invitation_bg_url ? {
@@ -400,7 +400,7 @@ export const AnimacaoPrincipal: React.FC = () => {
                 } : {}}
               >
                 {parsedLayout ? (
-                  <div 
+                  <div
                     ref={modalContainerRef}
                     style={{
                       width: '100%',
@@ -446,8 +446,8 @@ export const AnimacaoPrincipal: React.FC = () => {
                           backgroundColor: element.backgroundColor || 'transparent',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: element.align === 'center' ? 'center' : 
-                                           element.align === 'right' ? 'flex-end' : 'flex-start',
+                          justifyContent: element.align === 'center' ? 'center' :
+                            element.align === 'right' ? 'flex-end' : 'flex-start',
                           ...alignStyle,
                           lineHeight: element.lineHeight,
                           letterSpacing: `${element.letterSpacing}px`,
@@ -462,8 +462,8 @@ export const AnimacaoPrincipal: React.FC = () => {
                         };
 
                         return (
-                          <div 
-                            key={elementId} 
+                          <div
+                            key={elementId}
                             style={{
                               ...elementStyle,
                               pointerEvents: elementId.startsWith('botao') ? 'auto' : 'none',
@@ -473,7 +473,7 @@ export const AnimacaoPrincipal: React.FC = () => {
                               if (elementId.startsWith('botao')) {
                                 e.stopPropagation();
                                 if (elementId === 'botao_confirmar') {
-                                  const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan!`);
+                                  const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan! Junto a mim:  `);
                                   const finalLink = settings.rsvp_link.includes('?')
                                     ? `${settings.rsvp_link}&text=${message}`
                                     : `${settings.rsvp_link}?text=${message}`;
@@ -493,7 +493,7 @@ export const AnimacaoPrincipal: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div 
+                  <div
                     className="modal-card-text-content"
                     style={{
                       backgroundColor: `rgba(0, 0, 0, ${Number(settings.bg_overlay_opacity || 0) / 100})`,
@@ -516,7 +516,7 @@ export const AnimacaoPrincipal: React.FC = () => {
                 )}
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="action-buttons-modal"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -526,7 +526,7 @@ export const AnimacaoPrincipal: React.FC = () => {
                   <button
                     className="action-btn"
                     onClick={() => {
-                      const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan!`);
+                      const message = encodeURIComponent(`Olá, sou ${guestName} gostaria de confirmar minha presença na festa do Nathan! Junto a mim: `);
                       const finalLink = settings.rsvp_link.includes('?')
                         ? `${settings.rsvp_link}&text=${message}`
                         : `${settings.rsvp_link}?text=${message}`;
