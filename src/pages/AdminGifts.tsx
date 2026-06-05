@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Gift } from '../types';
-import { Trash2, Plus, Loader2, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, Loader2, ArrowLeft, Clipboard, Check, FileText, Share2 } from 'lucide-react';
 import { VisualEditor } from '../components/VisualEditor';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 
@@ -39,6 +39,11 @@ export const AdminGifts: React.FC = () => {
   const [modalGuestName, setModalGuestName] = useState('');
   const [modalCompanions, setModalCompanions] = useState<string[]>([]);
   const [modalNewCompanion, setModalNewCompanion] = useState('');
+
+  // Report State
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportType, setReportType] = useState<'text' | 'whatsapp' | 'csv'>('whatsapp');
+  const [copied, setCopied] = useState(false);
 
   // Tabs & Scanner State
   const [activeTab, setActiveTab] = useState<'gifts' | 'confirmations' | 'scanner'>('gifts');
@@ -185,6 +190,74 @@ export const AdminGifts: React.FC = () => {
     if (confirm('Tem certeza que deseja remover este convidado confirmado?')) {
       const newList = confirmedGuests.filter(g => g.id !== guestId);
       await saveConfirmedGuestsList(newList);
+    }
+  };
+
+  const handleCopyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
+  };
+
+  const generateReportText = () => {
+    const totalCompanions = confirmedGuests.reduce((acc, g) => acc + (g.companions ? g.companions.length : 0), 0);
+    const totalPessoas = confirmedGuests.length + totalCompanions;
+
+    if (reportType === 'whatsapp') {
+      let text = `📋 *RELATÓRIO DE CONVIDADOS CONFIRMADOS*\n\n`;
+      text += `📊 *Resumo de Presenças:*\n`;
+      text += `• Convidados Principais: ${confirmedGuests.length}\n`;
+      text += `• Acompanhantes: ${totalCompanions}\n`;
+      text += `• *Total Geral: ${totalPessoas} pessoas*\n\n`;
+      text += `✨ *Lista de Convidados:*\n`;
+      
+      confirmedGuests.forEach((guest, index) => {
+        const checkinEmoji = guest.checkedIn ? '✅' : '⏳';
+        text += `${index + 1}. *${guest.name}* ${checkinEmoji}\n`;
+        if (guest.companions && guest.companions.length > 0) {
+          guest.companions.forEach((comp: string) => {
+            text += `   └ 👥 ${comp}\n`;
+          });
+        }
+      });
+      return text;
+    } else if (reportType === 'csv') {
+      let text = `Nome;Tipo;Acompanhante de;Confirmado em;Check-in\n`;
+      confirmedGuests.forEach(guest => {
+        const dateStr = guest.confirmedAt ? new Date(guest.confirmedAt).toLocaleDateString('pt-BR') : '';
+        const checkedInStr = guest.checkedIn ? 'Sim' : 'Não';
+        const cleanName = guest.name.replace(/;/g, ',');
+        text += `"${cleanName}";"Principal";"-";"${dateStr}";"${checkedInStr}"\n`;
+        if (guest.companions && guest.companions.length > 0) {
+          guest.companions.forEach((comp: string) => {
+            const cleanComp = comp.replace(/;/g, ',');
+            text += `"${cleanComp}";"Acompanhante";"${cleanName}";"${dateStr}";"${checkedInStr}"\n`;
+          });
+        }
+      });
+      return text;
+    } else {
+      let text = `RELATÓRIO DE CONVIDADOS CONFIRMADOS\n`;
+      text += `===================================\n`;
+      text += `Convidados Principais: ${confirmedGuests.length}\n`;
+      text += `Acompanhantes: ${totalCompanions}\n`;
+      text += `Total Geral: ${totalPessoas} pessoas\n`;
+      text += `===================================\n\n`;
+      
+      confirmedGuests.forEach((guest, index) => {
+        const status = guest.checkedIn ? '[CHECK-IN REALIZADO]' : '[CONFIRMADO]';
+        text += `${index + 1}. ${guest.name} ${status}\n`;
+        if (guest.companions && guest.companions.length > 0) {
+          text += `   Acompanhantes:\n`;
+          guest.companions.forEach((comp: string) => {
+            text += `   - ${comp}\n`;
+          });
+        }
+      });
+      return text;
     }
   };
 
@@ -855,29 +928,55 @@ export const AdminGifts: React.FC = () => {
           boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
           marginBottom: '40px'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <h2 style={{ color: '#1e293b', margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
               👥 Pessoas Confirmadas ({confirmedGuests.length})
             </h2>
-            <button
-              onClick={handleOpenAddGuest}
-              style={{
-                padding: '8px 16px',
-                background: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <Plus size={16} /> Convidado Manual
-            </button>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {confirmedGuests.length > 0 && (
+                <button
+                  onClick={() => {
+                    setReportType('whatsapp');
+                    setIsReportModalOpen(true);
+                  }}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <FileText size={16} /> Relatório Copiável
+                </button>
+              )}
+              <button
+                onClick={handleOpenAddGuest}
+                style={{
+                  padding: '8px 16px',
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Plus size={16} /> Convidado Manual
+              </button>
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -1360,6 +1459,160 @@ export const AdminGifts: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Relatório de Confirmados */}
+      {isReportModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 20, 30, 0.8)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 11000,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'white',
+            width: '100%',
+            maxWidth: '600px',
+            borderRadius: '24px',
+            padding: '30px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+            color: '#1e293b',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '85vh'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h2 style={{ color: '#1e40af', margin: 0, fontFamily: 'system-ui, sans-serif', fontSize: '1.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Share2 size={24} /> Relatório de Confirmados
+              </h2>
+              <button
+                onClick={() => setIsReportModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  padding: '5px'
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <p style={{ color: '#64748b', fontSize: '0.875rem', margin: '0 0 20px 0' }}>
+              Selecione o formato desejado, visualize abaixo e copie para a área de transferência.
+            </p>
+
+            {/* Abas de Formato */}
+            <div style={{
+              display: 'flex',
+              background: '#f1f5f9',
+              padding: '4px',
+              borderRadius: '12px',
+              marginBottom: '20px',
+              gap: '4px'
+            }}>
+              {(['whatsapp', 'text', 'csv'] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => {
+                    setReportType(type);
+                    setCopied(false);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    background: reportType === type ? 'white' : 'transparent',
+                    color: reportType === type ? '#1e40af' : '#64748b',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: reportType === type ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                  }}
+                >
+                  {type === 'whatsapp' ? '💬 WhatsApp' : type === 'text' ? '📝 Texto Simples' : '📊 Excel / CSV'}
+                </button>
+              ))}
+            </div>
+
+            {/* Preview do Relatório */}
+            <div style={{ flex: 1, minHeight: '150px', marginBottom: '20px', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>
+                Visualização do Relatório
+              </label>
+              <textarea
+                readOnly
+                value={generateReportText()}
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  padding: '15px',
+                  borderRadius: '12px',
+                  border: '2px solid #e2e8f0',
+                  fontFamily: 'monospace',
+                  fontSize: '0.85rem',
+                  background: '#f8fafc',
+                  color: '#334155',
+                  resize: 'none',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* Botões de Ação */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setIsReportModalOpen(false)}
+                style={{
+                  padding: '12px 24px',
+                  background: 'transparent',
+                  color: '#64748b',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                Fechar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCopyToClipboard(generateReportText())}
+                style={{
+                  padding: '12px 24px',
+                  background: copied ? '#10b981' : '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'background-color 0.2s',
+                  boxShadow: copied ? '0 4px 10px rgba(16, 185, 129, 0.2)' : '0 4px 10px rgba(37, 99, 235, 0.2)'
+                }}
+              >
+                {copied ? <Check size={18} /> : <Clipboard size={18} />}
+                {copied ? 'Copiado!' : 'Copiar Relatório'}
+              </button>
+            </div>
           </div>
         </div>
       )}
